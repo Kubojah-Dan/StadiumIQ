@@ -6,12 +6,6 @@ AI-powered stadium operations assistant for real-time crowd safety and venue dec
 **Vertical:** Smart Venue Operations  
 **Primary Persona:** Stadium Operations Commander (SOC) managing ingress, queue pressure, and safety response during live events.
 
-## Submission Rule Checklist
-- Public GitHub repository: Required
-- Single branch only: Required
-- Repository size under 1MB: Enforced through root `.gitignore` (source-only commit strategy)
-- Code + README + assumptions: Included
-
 ## What This Solution Demonstrates
 - Smart, dynamic assistant behavior based on live venue context
 - Logical decision making from crowd density, alerts, queue load, and connection health
@@ -121,9 +115,4 @@ Demo admin:
 - E2E: `cd apps/web && npx playwright test`
 - Realtime backend: `cd services/realtime && pytest`
 - AI engine: `cd services/ai-engine && pytest`
-
-## Repository Size + Branch Guidance
-- Keep only source files, no generated artifacts.
-- Root `.gitignore` excludes `node_modules`, `.next`, `.venv`, reports, caches, and logs.
-- Use one branch only for submission.
 
