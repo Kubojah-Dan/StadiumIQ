@@ -1,0 +1,60 @@
+name: StadiumIQ CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npx playwright install --with-deps
+        working-directory: apps/web
+      - run: npx playwright test
+        working-directory: apps/web
+      
+  test-python-services:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ['realtime', 'ai-engine']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          cd services/${{ matrix.service }}
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest httpx pytest-asyncio
+      - name: Run tests
+        run: |
+          cd services/${{ matrix.service }}
+          python -m pytest tests/
+        env:
+          REDIS_URL: "redis://localhost:6379"
+
+  docker-build:
+    needs: [test-web, test-python-services]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Web App Docker Image
+        run: docker build -t stadiumiq-web:latest -f apps/web/Dockerfile .
+      - name: Build Realtime Service Docker Image
+        run: docker build -t stadiumiq-realtime:latest services/realtime
+      - name: Build AI Engine Docker Image
+        run: docker build -t stadiumiq-ai-engine:latest services/ai-engine
