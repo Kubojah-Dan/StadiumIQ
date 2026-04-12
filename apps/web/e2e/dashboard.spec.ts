@@ -1,20 +1,17 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('StadiumIQ Dashboard - Main View', () => {
-  test('should load the dashboard and verify key elements', async ({ page }) => {
+test.describe('StadiumIQ Landing Page', () => {
+  test('should load the landing page and verify brand elements', async ({ page }) => {
     // Navigate to the main page
     await page.goto('/');
 
-    // Verify header exists
+    // Verify brand text exists
     await expect(page.locator('text=StadiumIQ')).toBeVisible();
 
-    // Verify Sidebar links
-    await expect(page.locator('text=Overview')).toBeVisible();
-
-    // Verify some ARIA accessibility metrics are met
-    // (We will add the ARIA roles in step 5.4, but tests expect them)
-    // await expect(page.getByRole('main')).toBeVisible();
+    // Verify CTA buttons exist
+    await expect(page.locator('text=Open dashboard')).toBeVisible();
+    await expect(page.locator('text=Create account')).toBeVisible();
     
-    console.log('Smoke test passed.');
+    console.log('Landing page smoke test passed.');
   });
 });
