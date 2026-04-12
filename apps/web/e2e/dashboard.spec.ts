@@ -5,12 +5,12 @@ test.describe('StadiumIQ Landing Page', () => {
     // Navigate to the main page
     await page.goto('/');
 
-    // Verify brand text exists
-    await expect(page.locator('text=StadiumIQ')).toBeVisible();
+    // Verify brand link/logo specifically (using role to avoid strict mode violation with footer/paragraphs)
+    await expect(page.getByRole('link', { name: 'StadiumIQ', exact: true })).toBeVisible();
 
-    // Verify CTA buttons exist
-    await expect(page.locator('text=Open dashboard')).toBeVisible();
-    await expect(page.locator('text=Create account')).toBeVisible();
+    // Verify CTA buttons exist (using getByRole for better accessibility testing and specificity)
+    await expect(page.getByRole('link', { name: 'Open dashboard' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Create account' })).toBeVisible();
     
     console.log('Landing page smoke test passed.');
   });
