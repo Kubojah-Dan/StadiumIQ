@@ -4,8 +4,9 @@ FROM base AS builder
 WORKDIR /app
 # Copy root package/lock and turborepo configs
 COPY package.json package-lock.json turbo.json ./
-# Copy workspace apps
+# Copy workspace apps and packages
 COPY apps/web ./apps/web
+COPY packages ./packages
 # Due to monorepo, install dependencies at root
 RUN npm ci
 
