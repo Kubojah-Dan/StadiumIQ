@@ -140,6 +140,16 @@ jobs:
           docker push ${{ env.GAR_REPO }}/ai-engine:latest
           docker push ${{ env.GAR_REPO }}/ai-engine:${{ github.sha }}
 
+      # ── IoT Simulator (Background Worker) ─────────────────────
+      - name: Build & Push IoT Simulator image
+        run: |
+          docker build \
+            -t ${{ env.GAR_REPO }}/iot-simulator:latest \
+            -t ${{ env.GAR_REPO }}/iot-simulator:${{ github.sha }} \
+            services/iot-simulator
+          docker push ${{ env.GAR_REPO }}/iot-simulator:latest
+          docker push ${{ env.GAR_REPO }}/iot-simulator:${{ github.sha }}
+
 # ─────────────────────────────────────────────────────────────────
 # JOB 3: Deploy to Cloud Run
 #         Deploys each service using the SHA-tagged image for
@@ -241,6 +251,22 @@ jobs:
             --cpu=1 \
             --min-instances=0 \
             --max-instances=10 \
+            --set-env-vars="NEXT_PUBLIC_API_URL=https://stadiumiq-core-api-${{ env.GCP_REGION }}.a.run.app,NEXT_PUBLIC_REALTIME_WS_URL=https://stadiumiq-realtime-${{ env.GCP_REGION }}.a.run.app" \
+            --quiet
+
+      # ── Deploy IoT Simulator ──────────────────────────────────
+      - name: Deploy IoT Simulator to Cloud Run
+        run: |
+          gcloud run deploy stadiumiq-iot-simulator \
+            --image=${{ env.GAR_REPO }}/iot-simulator:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --no-allow-unauthenticated \
+            --min-instances=1 \
+            --max-instances=1 \
+            --vpc-connector=stadiumiq-connector \
+            --set-secrets="REDIS_URL=STADIUMIQ_REDIS_URL:latest" \
+            --service-account=stadiumiq-runtime@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
             --quiet
 
       # ── Print deployed service URLs ───────────────────────────

@@ -161,6 +161,11 @@ resource "google_cloud_run_v2_service" "web" {
         value = google_cloud_run_v2_service.core_api.uri
       }
 
+      env {
+        name  = "NEXT_PUBLIC_REALTIME_WS_URL"
+        value = google_cloud_run_v2_service.realtime.uri
+      }
+
       resources {
         limits = {
           cpu    = "1"
@@ -352,6 +357,41 @@ resource "google_cloud_run_service_iam_member" "ai_engine_public" {
   service  = google_cloud_run_v2_service.ai_engine.name
   role     = "roles/run.invoker"
   member   = "allUsers"
+}
+
+# ─────────────────────────────────────────────
+# Cloud Run — IoT Simulator (Background Data Generator)
+# ─────────────────────────────────────────────
+resource "google_cloud_run_v2_service" "iot_simulator" {
+  name     = "stadiumiq-iot-simulator"
+  location = var.gcp_region
+
+  template {
+    containers {
+      image = "${var.gcp_region}-docker.pkg.dev/${var.gcp_project}/stadiumiq/iot-simulator:latest"
+
+      env {
+        name = "REDIS_URL"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.redis_url.secret_id
+            version = "latest"
+          }
+        }
+      }
+    }
+    vpc_access {
+      connector = google_vpc_access_connector.connector.id
+      egress    = "ALL_TRAFFIC"
+    }
+    service_account = google_service_account.stadiumiq_runtime.email
+
+    # Ensure at least one instance is always running mock data
+    scaling {
+      min_instance_count = 1
+      max_instance_count = 1
+    }
+  }
 }
 
 # ─────────────────────────────────────────────
