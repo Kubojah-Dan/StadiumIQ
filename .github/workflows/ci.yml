@@ -185,6 +185,9 @@ jobs:
             --min-instances=0 \
             --max-instances=5 \
             --set-env-vars="ENV=production" \
+            --vpc-connector=stadiumiq-connector \
+            --set-secrets="DATABASE_URL=STADIUMIQ_DATABASE_URL:latest" \
+            --service-account=stadiumiq-runtime@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
             --quiet
 
       # ── Deploy Realtime Service ───────────────────────────────
@@ -201,6 +204,9 @@ jobs:
             --min-instances=0 \
             --max-instances=10 \
             --set-env-vars="ENV=production" \
+            --vpc-connector=stadiumiq-connector \
+            --set-secrets="REDIS_URL=STADIUMIQ_REDIS_URL:latest" \
+            --service-account=stadiumiq-runtime@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
             --quiet
 
       # ── Deploy AI Engine ──────────────────────────────────────
@@ -217,6 +223,9 @@ jobs:
             --min-instances=0 \
             --max-instances=5 \
             --set-env-vars="ENV=production" \
+            --vpc-connector=stadiumiq-connector \
+            --set-secrets="REDIS_URL=STADIUMIQ_REDIS_URL:latest" \
+            --service-account=stadiumiq-runtime@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
             --quiet
 
       # ── Deploy Web App ────────────────────────────────────────

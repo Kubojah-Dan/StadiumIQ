@@ -13,6 +13,49 @@ provider "google" {
 }
 
 # ─────────────────────────────────────────────
+# APIs to Enable
+# ─────────────────────────────────────────────
+resource "google_project_service" "vpcaccess" {
+  service                    = "vpcaccess.googleapis.com"
+  disable_on_destroy         = false
+}
+
+resource "google_project_service" "secretmanager" {
+  service                    = "secretmanager.googleapis.com"
+  disable_on_destroy         = false
+}
+
+# ─────────────────────────────────────────────
+# VPC Access Connector (For Cloud Run -> VPC)
+# ─────────────────────────────────────────────
+resource "google_vpc_access_connector" "connector" {
+  name          = "stadiumiq-connector"
+  region        = var.gcp_region
+  ip_cidr_range = "10.8.0.0/28"
+  network       = google_compute_network.stadiumiq_vpc.name
+  depends_on    = [google_project_service.vpcaccess]
+}
+
+# ─────────────────────────────────────────────
+# Secret Manager — Sensitive Configuration
+# ─────────────────────────────────────────────
+resource "google_secret_manager_secret" "db_url" {
+  secret_id = "STADIUMIQ_DATABASE_URL"
+  replication {
+    auto {}
+  }
+  depends_on = [google_project_service.secretmanager]
+}
+
+resource "google_secret_manager_secret" "redis_url" {
+  secret_id = "STADIUMIQ_REDIS_URL"
+  replication {
+    auto {}
+  }
+  depends_on = [google_project_service.secretmanager]
+}
+
+# ─────────────────────────────────────────────
 # Artifact Registry — Container Image Repository
 # ─────────────────────────────────────────────
 resource "google_artifact_registry_repository" "stadiumiq" {
@@ -283,4 +326,14 @@ output "realtime_url" {
 output "ai_engine_url" {
   value       = google_cloud_run_v2_service.ai_engine.uri
   description = "AI Engine Service URL"
+}
+
+output "sql_private_ip" {
+  value       = google_sql_database_instance.stadiumiq_db.private_ip_address
+  description = "Private IP of Cloud SQL instance"
+}
+
+output "redis_host" {
+  value       = google_redis_instance.stadiumiq_redis.host
+  description = "Internal IP/Host of Redis instance"
 }
