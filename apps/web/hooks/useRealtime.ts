@@ -15,27 +15,6 @@ type RealtimeAlert = {
   [key: string]: unknown;
 };
 
-function resolveRealtimeBaseUrl() {
-  const configured = process.env.NEXT_PUBLIC_REALTIME_WS_URL?.trim();
-  if (configured) {
-    if (configured.startsWith("http://")) return `ws://${configured.slice("http://".length)}`.replace(/\/$/, "");
-    if (configured.startsWith("https://")) return `wss://${configured.slice("https://".length)}`.replace(/\/$/, "");
-    return configured.replace(/\/$/, "");
-  }
-
-  if (typeof window === "undefined") return "ws://127.0.0.1:8001";
-
-  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-  const host = window.location.hostname;
-  const port = process.env.NEXT_PUBLIC_REALTIME_WS_PORT?.trim() || "8001";
-  return `${protocol}://${host}:${port}`;
-}
-
-function buildRealtimeUrl(stadiumId: string, token: string) {
-  const qs = new URLSearchParams({ stadium_id: stadiumId, token });
-  return `${resolveRealtimeBaseUrl()}/ws/dashboard?${qs.toString()}`;
-}
-
 export function useRealtime() {
   const { stadiumId } = useStadium();
   const { user } = useAuth();
@@ -63,10 +42,40 @@ export function useRealtime() {
       }
     };
 
-    const connectWs = () => {
+    const connectWs = async () => {
       if (cancelled) return;
 
-      const url = buildRealtimeUrl(stadiumId, token);
+      let wsBaseUrl = "";
+      try {
+        // Fetch dynamic config from our API route
+        const configRes = await fetch("/api/config");
+        const config = await configRes.json();
+        const configured = config.NEXT_PUBLIC_REALTIME_WS_URL?.trim();
+
+        if (configured) {
+          if (configured.startsWith("http://")) wsBaseUrl = `ws://${configured.slice("http://".length)}`.replace(/\/$/, "");
+          else if (configured.startsWith("https://")) wsBaseUrl = `wss://${configured.slice("https://".length)}`.replace(/\/$/, "");
+          else wsBaseUrl = configured.replace(/\/$/, "");
+        }
+      } catch (err) {
+        console.error("Failed to fetch runtime config, falling back to discovery", err);
+      }
+
+      // Fallback discovery logic if config fetch fails or is empty
+      if (!wsBaseUrl) {
+        const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const host = window.location.hostname;
+        // If we are on Cloud Run, we likely don't have a port 8001 open on the same host
+        const port = "8001";
+        wsBaseUrl = `${protocol}://${host}${host.includes("localhost") || host.includes("127.0.0.1") ? `:${port}` : ""}`;
+      }
+
+      if (cancelled) return;
+
+      const qs = new URLSearchParams({ stadium_id: stadiumId, token });
+      const url = `${wsBaseUrl}/ws/dashboard?${qs.toString()}`;
+      
+      console.log(`Connecting to Realtime WebSocket: ${wsBaseUrl}`);
       const ws = new WebSocket(url);
       wsRef.current = ws;
 
