@@ -5,8 +5,9 @@ WORKDIR /app
 # Install dependencies
 RUN pip install redis fastapi uvicorn
 
-# Copy the simulator script
+# Copy only the necessary file
 COPY simulator.py .
 
-# Run the simulator using uvicorn to provide a health check endpoint on port 8080
-CMD ["uvicorn", "simulator.py:app", "--host", "0.0.0.0", "--port", "8080"]
+# Standard Cloud Run port is 8080. 
+# Using "simulator:app" (module:app) instead of "simulator.py:app"
+CMD ["uvicorn", "simulator:app", "--host", "0.0.0.0", "--port", "8080"]
