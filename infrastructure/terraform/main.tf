@@ -168,6 +168,11 @@ resource "google_cloud_run_v2_service" "web" {
         }
       }
     }
+    vpc_access {
+      connector = google_vpc_access_connector.connector.id
+      egress    = "ALL_TRAFFIC"
+    }
+    service_account = google_service_account.stadiumiq_runtime.email
   }
 }
 
@@ -213,6 +218,11 @@ resource "google_cloud_run_v2_service" "core_api" {
         }
       }
     }
+    vpc_access {
+      connector = google_vpc_access_connector.connector.id
+      egress    = "ALL_TRAFFIC"
+    }
+    service_account = google_service_account.stadiumiq_runtime.email
   }
 }
 
@@ -258,6 +268,11 @@ resource "google_cloud_run_v2_service" "realtime" {
         }
       }
     }
+    vpc_access {
+      connector = google_vpc_access_connector.connector.id
+      egress    = "ALL_TRAFFIC"
+    }
+    service_account = google_service_account.stadiumiq_runtime.email
   }
 }
 
@@ -299,6 +314,11 @@ resource "google_cloud_run_v2_service" "ai_engine" {
         }
       }
     }
+    vpc_access {
+      connector = google_vpc_access_connector.connector.id
+      egress    = "ALL_TRAFFIC"
+    }
+    service_account = google_service_account.stadiumiq_runtime.email
   }
 }
 
