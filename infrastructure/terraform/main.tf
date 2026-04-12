@@ -158,7 +158,7 @@ resource "google_cloud_run_v2_service" "web" {
 
       env {
         name  = "NEXT_PUBLIC_API_URL"
-        value = "https://${google_cloud_run_v2_service.core_api.uri}"
+        value = google_cloud_run_v2_service.core_api.uri
       }
 
       resources {
