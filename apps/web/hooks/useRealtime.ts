@@ -65,9 +65,17 @@ export function useRealtime() {
       if (!wsBaseUrl) {
         const protocol = window.location.protocol === "https:" ? "wss" : "ws";
         const host = window.location.hostname;
-        // If we are on Cloud Run, we likely don't have a port 8001 open on the same host
-        const port = "8001";
-        wsBaseUrl = `${protocol}://${host}${host.includes("localhost") || host.includes("127.0.0.1") ? `:${port}` : ""}`;
+        
+        // Hardened Cloud Run Discovery: Cloud Run URLs often follow a pattern.
+        // If we are on stadiumiq-web-xyz.run.app, the realtime service is likely stadiumiq-realtime-xyz.run.app
+        if (host.includes("stadiumiq-web")) {
+          const realtimeHost = host.replace("stadiumiq-web", "stadiumiq-realtime");
+          wsBaseUrl = `${protocol}://${realtimeHost}`;
+        } else {
+          // Local development fallback
+          const port = "8001";
+          wsBaseUrl = `${protocol}://${host}${host.includes("localhost") || host.includes("127.0.0.1") ? `:${port}` : ""}`;
+        }
       }
 
       if (cancelled) return;

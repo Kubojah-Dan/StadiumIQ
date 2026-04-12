@@ -298,6 +298,7 @@ resource "google_cloud_run_v2_service" "realtime" {
       egress    = "ALL_TRAFFIC"
     }
     service_account = google_service_account.stadiumiq_runtime.email
+    session_affinity = true
   }
 }
 
