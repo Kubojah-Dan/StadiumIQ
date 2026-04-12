@@ -9,7 +9,7 @@ dist/
 build/
 coverage/
 *.tsbuildinfo
-package-lock.json
+# package-lock.json - REMOVED from ignore as it is required for CI reproducible builds
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
