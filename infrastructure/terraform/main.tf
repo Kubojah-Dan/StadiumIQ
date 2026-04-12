@@ -199,12 +199,22 @@ resource "google_cloud_run_v2_service" "core_api" {
       }
 
       env {
-        name  = "DATABASE_URL"
-        value = "postgresql+asyncpg://stadiumiq:${var.db_password}@${google_sql_database_instance.stadiumiq_db.private_ip_address}/stadiumiq_${var.environment}"
+        name = "DATABASE_URL"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.db_url.secret_id
+            version = "latest"
+          }
+        }
       }
       env {
-        name  = "REDIS_URL"
-        value = "redis://${google_redis_instance.stadiumiq_redis.host}:6379"
+        name = "REDIS_URL"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.redis_url.secret_id
+            version = "latest"
+          }
+        }
       }
       env {
         name  = "ENV"
@@ -249,12 +259,22 @@ resource "google_cloud_run_v2_service" "realtime" {
       }
 
       env {
-        name  = "REDIS_URL"
-        value = "redis://${google_redis_instance.stadiumiq_redis.host}:6379"
+        name = "REDIS_URL"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.redis_url.secret_id
+            version = "latest"
+          }
+        }
       }
       env {
-        name  = "DATABASE_URL"
-        value = "postgresql+asyncpg://stadiumiq:${var.db_password}@${google_sql_database_instance.stadiumiq_db.private_ip_address}/stadiumiq_${var.environment}"
+        name = "DATABASE_URL"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.db_url.secret_id
+            version = "latest"
+          }
+        }
       }
       env {
         name  = "ENV"
@@ -299,8 +319,13 @@ resource "google_cloud_run_v2_service" "ai_engine" {
       }
 
       env {
-        name  = "REDIS_URL"
-        value = "redis://${google_redis_instance.stadiumiq_redis.host}:6379"
+        name = "REDIS_URL"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.redis_url.secret_id
+            version = "latest"
+          }
+        }
       }
       env {
         name  = "ENV"
