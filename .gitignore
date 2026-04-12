@@ -38,12 +38,13 @@ apps/mobile/.expo-shared/
 # Optional static assets not required for challenge review
 apps/web/app/fonts/
 
-# Environment and secrets
+# Environment and secrets — only ignore real .env files, NOT the example
 .env
-.env.*
-.env.example
+.env.local
+.env.*.local
 *.pem
 *.key
+key.json
 
 # OS / editor noise
 .DS_Store
@@ -52,5 +53,5 @@ Thumbs.db
 *.swo
 .vscode/
 .idea/
-.github/
+# NOTE: .github/ must NOT be ignored — GitHub Actions workflows live there
 

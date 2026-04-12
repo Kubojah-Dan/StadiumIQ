@@ -1,7 +1,13 @@
-variable "aws_region" {
-  description = "The AWS region to deploy into"
+variable "gcp_project" {
+  description = "The GCP project ID to deploy into"
   type        = string
-  default     = "us-east-1"
+  default     = "promptwars-493015"
+}
+
+variable "gcp_region" {
+  description = "The GCP region to deploy into (asia-south1 = Mumbai)"
+  type        = string
+  default     = "asia-south1"
 }
 
 variable "environment" {
@@ -11,7 +17,7 @@ variable "environment" {
 }
 
 variable "db_password" {
-  description = "Database master password"
+  description = "Cloud SQL database master password"
   type        = string
   sensitive   = true
 }

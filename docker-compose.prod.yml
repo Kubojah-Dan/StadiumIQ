@@ -1,6 +1,14 @@
+# docker-compose.prod.yml
+# ─────────────────────────────────────────────────────────────────
+# LOCAL PRODUCTION SIMULATION
+# Use this to test the production build locally before deploying
+# to Cloud Run. In actual GCP deployment, stateful services
+# (Cloud SQL + Memorystore) replace db/redis containers.
+# ─────────────────────────────────────────────────────────────────
 version: '3.8'
 
 services:
+  # ── Stateful backing services (local simulation only) ──────────
   db:
     image: timescale/timescaledb:latest-pg14
     restart: always
@@ -21,8 +29,6 @@ services:
   redis:
     image: redis:7-alpine
     restart: always
-    ports:
-      - "6379:6379"
     networks:
       - stadium_net
     healthcheck:
@@ -31,25 +37,32 @@ services:
       timeout: 5s
       retries: 5
 
-  ai-engine:
+  # ── Application Services ───────────────────────────────────────
+  core-api:
     build:
-      context: ./services/ai-engine
+      context: ./services/core-api
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "8002:8002"
+      - "8000:8000"
     environment:
+      - PORT=8000
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stadiumiq}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stadiumiq_prod}
       - REDIS_URL=redis://redis:6379
       - ENV=production
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
     depends_on:
       redis:
         condition: service_healthy
+      db:
+        condition: service_healthy
     networks:
       - stadium_net
-    deploy:
-      resources:
-        limits:
-          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   realtime:
     build:
@@ -59,8 +72,9 @@ services:
     ports:
       - "8001:8001"
     environment:
+      - PORT=8001
       - REDIS_URL=redis://redis:6379
-      - DB_URL=postgresql://${POSTGRES_USER:-stadiumiq}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stadiumiq_prod}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stadiumiq}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stadiumiq_prod}
       - ENV=production
     depends_on:
       redis:
@@ -75,6 +89,27 @@ services:
       timeout: 10s
       retries: 3
 
+  ai-engine:
+    build:
+      context: ./services/ai-engine
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - REDIS_URL=redis://redis:6379
+      - ENV=production
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - stadium_net
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
   web:
     build:
       context: .
@@ -83,10 +118,18 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_REALTIME_WS=wss://api.stadiumiq.demo/ws/dashboard
-      - NEXT_PUBLIC_API_URL=https://api.stadiumiq.demo
+      - PORT=3000
+      - NODE_ENV=production
+      # In Cloud Run: these point to the actual *.run.app service URLs
+      # Locally: point to the local containers
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      - NEXT_PUBLIC_REALTIME_WS_URL=${NEXT_PUBLIC_REALTIME_WS_URL:-ws://localhost:8001}
+      - NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY:-}
+      - GOOGLE_GEMINI_API_KEY=${GOOGLE_GEMINI_API_KEY:-}
+      - GOOGLE_GEMINI_MODEL=${GOOGLE_GEMINI_MODEL:-gemini-2.0-flash}
     depends_on:
       - realtime
+      - core-api
     networks:
       - stadium_net
 

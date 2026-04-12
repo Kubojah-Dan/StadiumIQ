@@ -1,4 +1,4 @@
-name: StadiumIQ CI/CD
+name: StadiumIQ CI/CD → GCP Cloud Run
 
 on:
   push:
@@ -6,39 +6,61 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  GCP_REGION: asia-south1
+  GAR_HOSTNAME: asia-south1-docker.pkg.dev
+  GAR_REPO: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/stadiumiq
+
+# ─────────────────────────────────────────────────────────────────
+# JOB 1: Test — Web (Node/Playwright) + Python Services
+# ─────────────────────────────────────────────────────────────────
 jobs:
   test-web:
+    name: Test Web App
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js
+
+      - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
-      - run: npm ci
-      - run: npm run lint
-      - run: npx playwright install --with-deps
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
         working-directory: apps/web
-      - run: npx playwright test
+
+      - name: Run Playwright tests
+        run: npx playwright test
         working-directory: apps/web
-      
+
   test-python-services:
+    name: Test Python Services (${{ matrix.service }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
         service: ['realtime', 'ai-engine']
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
+
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Install dependencies
         run: |
           cd services/${{ matrix.service }}
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest httpx pytest-asyncio
+
       - name: Run tests
         run: |
           cd services/${{ matrix.service }}
@@ -46,15 +68,178 @@ jobs:
         env:
           REDIS_URL: "redis://localhost:6379"
 
-  docker-build:
+# ─────────────────────────────────────────────────────────────────
+# JOB 2: Build & Push to Google Artifact Registry
+#         Only runs on push to main (not on PRs)
+#         Uses keyless Workload Identity Federation — no JSON keys
+# ─────────────────────────────────────────────────────────────────
+  build-and-push:
+    name: Build & Push to Artifact Registry
     needs: [test-web, test-python-services]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+
+    # Required for Workload Identity Federation token exchange
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       - uses: actions/checkout@v4
-      - name: Build Web App Docker Image
-        run: docker build -t stadiumiq-web:latest -f apps/web/Dockerfile .
-      - name: Build Realtime Service Docker Image
-        run: docker build -t stadiumiq-realtime:latest services/realtime
-      - name: Build AI Engine Docker Image
-        run: docker build -t stadiumiq-ai-engine:latest services/ai-engine
+
+      # Keyless auth via Workload Identity Federation (no JSON key needed)
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: stadiumiq-deployer@promptwars-493015.iam.gserviceaccount.com
+
+      # Configure Docker to push to Artifact Registry
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GAR_HOSTNAME }} --quiet
+
+      # ── Web (Next.js) ─────────────────────────────────────────
+      - name: Build & Push Web image
+        run: |
+          docker build \
+            -t ${{ env.GAR_REPO }}/web:latest \
+            -t ${{ env.GAR_REPO }}/web:${{ github.sha }} \
+            -f apps/web/Dockerfile .
+          docker push ${{ env.GAR_REPO }}/web:latest
+          docker push ${{ env.GAR_REPO }}/web:${{ github.sha }}
+
+      # ── Core API (FastAPI) ────────────────────────────────────
+      - name: Build & Push Core API image
+        run: |
+          docker build \
+            -t ${{ env.GAR_REPO }}/core-api:latest \
+            -t ${{ env.GAR_REPO }}/core-api:${{ github.sha }} \
+            services/core-api
+          docker push ${{ env.GAR_REPO }}/core-api:latest
+          docker push ${{ env.GAR_REPO }}/core-api:${{ github.sha }}
+
+      # ── Realtime Service (FastAPI WebSocket) ──────────────────
+      - name: Build & Push Realtime image
+        run: |
+          docker build \
+            -t ${{ env.GAR_REPO }}/realtime:latest \
+            -t ${{ env.GAR_REPO }}/realtime:${{ github.sha }} \
+            services/realtime
+          docker push ${{ env.GAR_REPO }}/realtime:latest
+          docker push ${{ env.GAR_REPO }}/realtime:${{ github.sha }}
+
+      # ── AI Engine (FastAPI) ───────────────────────────────────
+      - name: Build & Push AI Engine image
+        run: |
+          docker build \
+            -t ${{ env.GAR_REPO }}/ai-engine:latest \
+            -t ${{ env.GAR_REPO }}/ai-engine:${{ github.sha }} \
+            services/ai-engine
+          docker push ${{ env.GAR_REPO }}/ai-engine:latest
+          docker push ${{ env.GAR_REPO }}/ai-engine:${{ github.sha }}
+
+# ─────────────────────────────────────────────────────────────────
+# JOB 3: Deploy to Cloud Run
+#         Deploys each service using the SHA-tagged image for
+#         reproducible, rollback-friendly deployments.
+# ─────────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to Cloud Run
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    # Required for Workload Identity Federation token exchange
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Keyless auth via Workload Identity Federation
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: stadiumiq-deployer@promptwars-493015.iam.gserviceaccount.com
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      # ── Deploy Core API ───────────────────────────────────────
+      - name: Deploy Core API to Cloud Run
+        run: |
+          gcloud run deploy stadiumiq-core-api \
+            --image=${{ env.GAR_REPO }}/core-api:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=8000 \
+            --memory=512Mi \
+            --cpu=1 \
+            --min-instances=0 \
+            --max-instances=5 \
+            --set-env-vars="ENV=production" \
+            --quiet
+
+      # ── Deploy Realtime Service ───────────────────────────────
+      - name: Deploy Realtime Service to Cloud Run
+        run: |
+          gcloud run deploy stadiumiq-realtime \
+            --image=${{ env.GAR_REPO }}/realtime:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=8001 \
+            --memory=512Mi \
+            --cpu=1 \
+            --min-instances=0 \
+            --max-instances=10 \
+            --set-env-vars="ENV=production" \
+            --quiet
+
+      # ── Deploy AI Engine ──────────────────────────────────────
+      - name: Deploy AI Engine to Cloud Run
+        run: |
+          gcloud run deploy stadiumiq-ai-engine \
+            --image=${{ env.GAR_REPO }}/ai-engine:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=8002 \
+            --memory=1Gi \
+            --cpu=2 \
+            --min-instances=0 \
+            --max-instances=5 \
+            --set-env-vars="ENV=production" \
+            --quiet
+
+      # ── Deploy Web App ────────────────────────────────────────
+      - name: Deploy Web App to Cloud Run
+        run: |
+          gcloud run deploy stadiumiq-web \
+            --image=${{ env.GAR_REPO }}/web:${{ github.sha }} \
+            --region=${{ env.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=3000 \
+            --memory=512Mi \
+            --cpu=1 \
+            --min-instances=0 \
+            --max-instances=10 \
+            --quiet
+
+      # ── Print deployed service URLs ───────────────────────────
+      - name: Print Service URLs
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ StadiumIQ deployed to Cloud Run!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          gcloud run services list \
+            --region=${{ env.GCP_REGION }} \
+            --filter="metadata.name:stadiumiq" \
+            --format="table(metadata.name,status.url)" \
+            --quiet
