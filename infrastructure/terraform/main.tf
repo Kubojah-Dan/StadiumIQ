@@ -175,7 +175,7 @@ resource "google_cloud_run_v2_service" "web" {
     }
     vpc_access {
       connector = google_vpc_access_connector.connector.id
-      egress    = "ALL_TRAFFIC"
+      egress    = "PRIVATE_RANGES_ONLY"
     }
     service_account = google_service_account.stadiumiq_runtime.email
   }
@@ -235,7 +235,7 @@ resource "google_cloud_run_v2_service" "core_api" {
     }
     vpc_access {
       connector = google_vpc_access_connector.connector.id
-      egress    = "ALL_TRAFFIC"
+      egress    = "PRIVATE_RANGES_ONLY"
     }
     service_account = google_service_account.stadiumiq_runtime.email
   }
@@ -295,7 +295,7 @@ resource "google_cloud_run_v2_service" "realtime" {
     }
     vpc_access {
       connector = google_vpc_access_connector.connector.id
-      egress    = "ALL_TRAFFIC"
+      egress    = "PRIVATE_RANGES_ONLY"
     }
     service_account = google_service_account.stadiumiq_runtime.email
     session_affinity = true
@@ -347,7 +347,7 @@ resource "google_cloud_run_v2_service" "ai_engine" {
     }
     vpc_access {
       connector = google_vpc_access_connector.connector.id
-      egress    = "ALL_TRAFFIC"
+      egress    = "PRIVATE_RANGES_ONLY"
     }
     service_account = google_service_account.stadiumiq_runtime.email
   }
@@ -383,7 +383,7 @@ resource "google_cloud_run_v2_service" "iot_simulator" {
     }
     vpc_access {
       connector = google_vpc_access_connector.connector.id
-      egress    = "ALL_TRAFFIC"
+      egress    = "PRIVATE_RANGES_ONLY"
     }
     service_account = google_service_account.stadiumiq_runtime.email
 
