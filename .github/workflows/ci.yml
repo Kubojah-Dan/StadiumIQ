@@ -251,7 +251,6 @@ jobs:
             --cpu=1 \
             --min-instances=0 \
             --max-instances=10 \
-            --set-env-vars="NEXT_PUBLIC_API_URL=https://stadiumiq-core-api-${{ env.GCP_REGION }}.a.run.app,NEXT_PUBLIC_REALTIME_WS_URL=https://stadiumiq-realtime-${{ env.GCP_REGION }}.a.run.app" \
             --quiet
 
       # ── Deploy IoT Simulator ──────────────────────────────────
