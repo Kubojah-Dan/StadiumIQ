@@ -3,8 +3,10 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install dependencies
-COPY simulator.py .
-RUN pip install redis
+RUN pip install redis fastapi uvicorn
 
-# Run the simulator
-CMD ["python", "simulator.py"]
+# Copy the simulator script
+COPY simulator.py .
+
+# Run the simulator using uvicorn to provide a health check endpoint on port 8080
+CMD ["uvicorn", "simulator.py:app", "--host", "0.0.0.0", "--port", "8080"]
