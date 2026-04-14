@@ -112,7 +112,8 @@ export default function QueueManager({ onNavigateToAR }: { onNavigateToAR: () =>
   );
 }
 
-function QueueCard({ id, name, wait, level, distance, recommended }) {
+interface QueueItem { id: string; name: string; wait: number; level: string; distance: string; recommended: boolean }
+function QueueCard({ id, name, wait, level, distance, recommended }: QueueItem) {
   return (
     <div className={`glass-card p-8 group cursor-pointer hover:border-stadium-neon/40 relative overflow-hidden ${recommended ? 'shadow-[0_0_40px_rgba(6,182,212,0.2)] border-stadium-neon/30' : 'border-white/5'}`}>
       {recommended && (
@@ -151,7 +152,8 @@ function QueueCard({ id, name, wait, level, distance, recommended }) {
   );
 }
 
-function RestroomRow({ section, status, color, percent }) {
+interface CapacityProps { section: string; status: string; color: string; percent: number }
+function CapacityBar({ section, status, color, percent }: CapacityProps) {
   return (
     <div className="glass-card p-5 group flex items-center justify-between hover:bg-white/5 transition-all border-white/5">
       <div className="flex items-center gap-5">
@@ -178,7 +180,8 @@ function RestroomRow({ section, status, color, percent }) {
   );
 }
 
-function TabButton({ children, active, onClick }) {
+interface TabProps { children: React.ReactNode; active: boolean; onClick: () => void }
+function QueueTab({ children, active, onClick }: TabProps) {
   return (
     <button 
       onClick={onClick}

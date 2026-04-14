@@ -13,7 +13,8 @@ import {
   Navigation
 } from 'lucide-react';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+// @ts-ignore - GLTFLoader path can be fickle in some build pipelines
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { motion } from 'framer-motion';
 import { useStadium } from '../context/StadiumContext';
 import { useRealtime } from '../hooks/useRealtime';
@@ -339,7 +340,7 @@ export default function Dashboard() {
                         {p.alert_level}
                     </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 leading-relaxed mb-4">{p.message || 'Localized surge detected in primary concourse.'}</p>
+                    <p className="text-[11px] text-slate-400 leading-relaxed mb-4">{String(p.message || 'Localized surge detected in primary concourse.')}</p>
                     <div className="flex items-center justify-between text-[10px]">
                     <span className="text-slate-500 font-bold uppercase">{p.estimated_surge_time ? `ETA: ${p.estimated_surge_time}` : 'Active Status'}</span>
                     <span className="text-stadium-neon font-bold">{(Number(p.surge_probability || 1) * 100).toFixed(0)}% Certainty</span>

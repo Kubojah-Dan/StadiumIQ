@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function EmergencyPanel({ onClose }) {
+export default function EmergencyPanel({ onClose }: { onClose: () => void }) {
   const [isCalling, setIsCalling] = useState(false);
   const [showMap, setShowMap] = useState(false);
 

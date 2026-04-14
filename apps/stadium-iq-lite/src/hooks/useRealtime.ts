@@ -144,7 +144,7 @@ export function useRealtime() {
     };
   }, [stadiumId]);
 
-  return { twinState, alerts, connected, isSimulator };
+  return { twinState, alerts, connected, isSimulator, connectionStatus };
 }
 
 function handleRealtimeEvent(payload: RealtimeEvent, setTwinState: any, setAlerts: any) {

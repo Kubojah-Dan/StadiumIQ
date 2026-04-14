@@ -1,6 +1,8 @@
 import React from 'react';
 import { Leaf, Award, Zap, Coins, Globe, TreePine } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useStadium } from '../context/StadiumContext';
+import { useRealtime } from '../hooks/useRealtime';
 
 export function SustainabilityDashboard() {
   const { stadium } = useStadium();
@@ -31,8 +33,8 @@ export function SustainabilityDashboard() {
       <div className="glass-card p-6">
         <h3 className="text-sm font-bold mb-4 uppercase tracking-widest text-slate-400">Green Initiatives</h3>
         <div className="space-y-3">
-          <GreenBar label="Waste Diversion" percent={60 + (seed % 35)} />
-          <GreenBar label="Water Optimization" percent={40 + (seed % 50)} />
+          <GreenBar label="Waste Diversion" percent={60 + (Math.floor(liveSeed) % 35)} />
+          <GreenBar label="Water Optimization" percent={40 + (Math.floor(liveSeed) % 50)} />
         </div>
       </div>
     </div>
@@ -75,12 +77,9 @@ export function FanRewards() {
   );
 }
 
-import { useStadium } from '../context/StadiumContext';
-import { useRealtime } from '../hooks/useRealtime';
-
-function EcoMetric({ label, value, sub, icon }) {
+function EcoMetric({ label, value, sub, icon }: { label: string, value: string, sub: string, icon: React.ReactNode }) {
   return (
-    <div className="bg-stadium-dark/50 p-4 rounded-2xl border border-white/5 flex items-center gap-4">
+    <div className="p-5 rounded-3xl bg-white/5 border border-white/5 hover:border-green-500/20 transition-all group">
       <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center">{icon}</div>
       <div>
         <p className="text-sm font-black text-white">{value}</p>
@@ -91,9 +90,9 @@ function EcoMetric({ label, value, sub, icon }) {
   );
 }
 
-function GreenBar({ label, percent }) {
+function GreenBar({ label, percent }: { label: string, percent: number }) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500">
         <span>{label}</span>
         <span>{percent}%</span>
