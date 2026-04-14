@@ -8,15 +8,17 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
   const [showLogin, setShowLogin] = useState(false);
 
   return (
-    <div className="flex flex-col min-h-screen bg-stadium-dark text-white relative overflow-x-hidden font-sans selection:bg-stadium-neon selection:text-stadium-dark">
+    <div className="flex flex-col min-h-screen bg-stadium-dark text-white relative font-sans selection:bg-stadium-neon selection:text-stadium-dark">
       <AnimatePresence>
         {showRegister && <RegistrationModal onClose={() => setShowRegister(false)} />}
         {showLogin && <LoginModal onLogin={onEnter} onClose={() => setShowLogin(false)} />}
       </AnimatePresence>
 
-      {/* Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-stadium-neon/10 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
+      {/* background clipping container to prevent overscroll */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-stadium-neon/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-500/10 blur-[120px] rounded-full" />
+      </div>
 
       {/* Header */}
       <header className="h-16 md:h-20 flex items-center justify-between px-6 md:px-16 sticky top-0 z-50 border-b border-white/5 bg-stadium-dark/80 backdrop-blur-xl shrink-0">
@@ -46,7 +48,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
         </div>
       </header>
 
-      <main className="flex-grow relative z-10 px-6 md:px-16 pt-16 md:pt-24 pb-24 md:pb-32 max-w-7xl mx-auto">
+      <main className="flex-1 relative z-10 px-6 md:px-16 pt-16 md:pt-24 pb-24 md:pb-32 max-w-7xl mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-20 items-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -73,7 +75,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <button 
                 onClick={() => setShowLogin(true)}
-                className="px-8 py-4 md:py-4 bg-stadium-neon text-stadium-dark font-black rounded-xl md:rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-cyan-500/20 hover:scale-105 transition-all group uppercase tracking-widest text-xs md:text-sm tap-target"
+                className="px-8 py-4 md:py-4 bg-stadium-neon text-stadium-dark font-black rounded-xl md:rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-cyan-500/20 hover:scale-[1.02] transition-all group uppercase tracking-widest text-xs md:text-sm tap-target"
               >
                 Launch Ops Center
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -178,7 +180,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
         </section>
       </main>
 
-      <footer className="px-8 md:px-16 py-12 md:py-16 border-t border-white/5 bg-stadium-dark/50 backdrop-blur-3xl shrink-0">
+      <footer className="px-8 md:px-16 py-12 md:py-16 border-t border-white/5 bg-stadium-dark backdrop-blur-3xl shrink-0 mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
            <div className="text-slate-600 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em] text-center md:text-left">
              © 2026 STADIUMIQ OPERATIONS • GLOBAL MISSION CONTROL
