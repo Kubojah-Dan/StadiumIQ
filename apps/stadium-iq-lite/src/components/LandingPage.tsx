@@ -8,7 +8,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
   const [showLogin, setShowLogin] = useState(false);
 
   return (
-    <div className="min-h-screen bg-stadium-dark text-white relative overflow-x-hidden font-sans selection:bg-stadium-neon selection:text-stadium-dark">
+    <div className="flex flex-col min-h-screen bg-stadium-dark text-white relative overflow-x-hidden font-sans selection:bg-stadium-neon selection:text-stadium-dark">
       <AnimatePresence>
         {showRegister && <RegistrationModal onClose={() => setShowRegister(false)} />}
         {showLogin && <LoginModal onLogin={onEnter} onClose={() => setShowLogin(false)} />}
@@ -19,7 +19,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
       <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
 
       {/* Header */}
-      <header className="h-16 md:h-20 flex items-center justify-between px-6 md:px-16 sticky top-0 z-50 border-b border-white/5 bg-stadium-dark/80 backdrop-blur-xl">
+      <header className="h-16 md:h-20 flex items-center justify-between px-6 md:px-16 sticky top-0 z-50 border-b border-white/5 bg-stadium-dark/80 backdrop-blur-xl shrink-0">
         <div className="flex items-center gap-2 md:gap-3">
           <div className="w-8 h-8 md:w-10 md:h-10 bg-stadium-neon rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
             <Activity className="text-stadium-dark size-4.5 md:size-6" />
@@ -46,7 +46,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
         </div>
       </header>
 
-      <main className="relative z-10 px-6 md:px-16 pt-16 md:pt-24 pb-24 md:pb-32 max-w-7xl mx-auto">
+      <main className="flex-grow relative z-10 px-6 md:px-16 pt-16 md:pt-24 pb-24 md:pb-32 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-20 items-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -178,7 +178,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
         </section>
       </main>
 
-      <footer className="px-8 md:px-16 py-12 md:py-16 border-t border-white/5 bg-stadium-dark/50 backdrop-blur-3xl mt-24 md:mt-40">
+      <footer className="px-8 md:px-16 py-12 md:py-16 border-t border-white/5 bg-stadium-dark/50 backdrop-blur-3xl shrink-0">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
            <div className="text-slate-600 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em] text-center md:text-left">
              © 2026 STADIUMIQ OPERATIONS • GLOBAL MISSION CONTROL

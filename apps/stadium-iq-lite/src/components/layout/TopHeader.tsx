@@ -1,6 +1,7 @@
 import React from 'react';
-import { Activity, Bell, ShieldAlert, User, Menu } from 'lucide-react';
+import { Activity, Bell, ShieldAlert, User, Menu, ChevronDown, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { STADIUMS_INDIA, useStadium } from '../../context/StadiumContext';
 
 interface TopHeaderProps {
   title: string;
@@ -23,6 +24,8 @@ export default function TopHeader({
   isConnected,
   userImage
 }: TopHeaderProps) {
+  const { stadiumId, setStadiumId, stadium } = useStadium();
+
   return (
     <header className="sticky top-0 z-40 w-full glass-nav border-b pt-[var(--safe-area-top)]">
       <div className="h-16 px-4 md:px-8 flex items-center justify-between gap-4">
@@ -41,15 +44,28 @@ export default function TopHeader({
           </div>
         </div>
 
-        {/* Center: Dynamic Title */}
+        {/* Center: Stadium Dropdown */}
         <div className="flex-1 flex justify-center overflow-hidden">
-          <motion.h1 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-sm md:text-base font-bold text-white uppercase tracking-widest truncate max-w-[150px] sm:max-w-none"
-          >
-            {title}
-          </motion.h1>
+          <div className="relative group/dropdown max-w-[200px] md:max-w-xs w-full">
+            <select 
+              value={stadiumId}
+              onChange={(e) => setStadiumId(e.target.value)}
+              className="absolute inset-0 opacity-0 cursor-pointer z-10"
+            >
+              {STADIUMS_INDIA.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+            <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 flex items-center justify-between gap-3 group-hover/dropdown:bg-white/10 transition-all">
+              <div className="flex items-center gap-2 overflow-hidden">
+                 <MapPin size={14} className="text-stadium-neon shrink-0" />
+                 <span className="text-[10px] md:text-xs font-bold text-white uppercase tracking-widest truncate">
+                   {stadium.name}
+                 </span>
+              </div>
+              <ChevronDown size={14} className="text-slate-500 shrink-0" />
+            </div>
+          </div>
         </div>
 
         {/* Right: Actions */}

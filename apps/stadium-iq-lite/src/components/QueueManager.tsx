@@ -102,13 +102,14 @@ export default function QueueManager({ onNavigateToAR }: { onNavigateToAR: () =>
               <p className="text-[11px] md:text-sm text-slate-400 leading-relaxed max-w-xl">
                 Telemetry implies optimal flow at <span className="text-white font-bold">{activeCategory.toUpperCase()} Array</span>. 
                 We recommend heading to <span className="text-stadium-neon font-black">{recommended.id}</span>. 
+                Est. wait: <span className="text-stadium-success font-black">{recommended.wait_time} MINS</span>.
               </p>
               <button 
                 onClick={onNavigateToAR}
                 className="mt-6 md:mt-8 w-full sm:w-auto px-8 py-3 bg-stadium-neon text-stadium-dark font-black text-[10px] md:text-xs uppercase tracking-widest rounded-xl hover:scale-105 transition-all shadow-lg shadow-cyan-500/20 tap-target flex items-center justify-center gap-3"
               >
-                Launch Tactical HUD
-                <ChevronRight size={16} />
+                Start AR Navigation
+                <Navigation size={16} />
               </button>
             </div>
           </div>
@@ -133,11 +134,14 @@ function QueueCard({ id, name, wait, level, distance, recommended }: QueueItem) 
           <h3 className="text-base md:text-xl font-bold mt-1.5 text-white tracking-tight leading-none">{name}</h3>
         </div>
         <div className={`p-2.5 md:p-3 rounded-xl md:rounded-2xl glass border transition-colors ${level === 'LOW' ? 'border-stadium-success/30 text-stadium-success' : 'border-stadium-emergency/30 text-stadium-emergency'}`}>
-          <Clock className="size-4.5 md:size-5" />
+          <div className="flex flex-col items-center">
+            <Clock className="size-4 md:size-4.5 mb-1" />
+            <span className="text-[8px] font-black">{level}</span>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-6 border-t border-white/5">
+      <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-white/5 gap-4">
         <div className="flex gap-4 md:gap-6">
           <div>
             <p className="text-[8px] md:text-[10px] text-slate-500 uppercase font-bold tracking-widest">Wait</p>
@@ -153,9 +157,9 @@ function QueueCard({ id, name, wait, level, distance, recommended }: QueueItem) 
         </div>
         <button 
           onClick={(e) => { e.stopPropagation(); (window as any).__onNavigateToAR?.(); }}
-          className="px-4 py-2 bg-white/5 hover:bg-stadium-neon hover:text-stadium-dark text-slate-400 text-[8px] md:text-[9px] font-black uppercase tracking-widest rounded-lg border border-white/5 transition-all tap-target flex items-center gap-2"
+          className="w-full sm:w-auto px-4 py-2 bg-white/5 hover:bg-stadium-neon hover:text-stadium-dark text-slate-400 text-[8px] md:text-[9px] font-black uppercase tracking-widest rounded-lg border border-white/5 transition-all tap-target flex items-center justify-center gap-2"
         >
-          Navigate
+          Start AR Navigation
           <Navigation className="size-2.5" />
         </button>
       </div>

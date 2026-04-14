@@ -115,19 +115,29 @@ export default function StadiumIntelCard({ stadium }: { stadium: Stadium }) {
          <div className="space-y-3 md:space-y-4">
             <p className="text-[8px] md:text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2 md:mb-3">Tactical Gate Flow</p>
             {intel?.gateWaitTimes.map((gate, i) => (
-              <div key={i} className="flex items-center justify-between p-3 md:p-4 bg-white/[0.03] rounded-xl md:rounded-2xl border border-white/5 hover:bg-white/5 transition-all group/gate">
-                 <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
-                    <div className={`p-2 rounded-lg md:rounded-xl shrink-0 ${gate.status === 'critical' ? 'bg-stadium-emergency/10 border border-stadium-emergency/20' : 'bg-white/5 border border-white/5'}`}>
-                        <Clock className={`size-3.5 md:size-4 ${gate.status === 'critical' ? 'text-stadium-emergency' : gate.status === 'watch' ? 'text-stadium-warning' : 'text-slate-500 group-hover/gate:text-stadium-neon transition-colors'}`} />
+              <div key={i} className="flex flex-col gap-2 p-3 md:p-4 bg-white/[0.03] rounded-xl md:rounded-2xl border border-white/5 hover:bg-white/5 transition-all group/gate">
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+                       <div className={`p-2 rounded-lg md:rounded-xl shrink-0 ${gate.status === 'critical' ? 'bg-stadium-emergency/10 border border-stadium-emergency/20' : 'bg-white/5 border border-white/5'}`}>
+                           <Clock className={`size-3.5 md:size-4 ${gate.status === 'critical' ? 'text-stadium-emergency' : gate.status === 'watch' ? 'text-stadium-warning' : 'text-slate-500 group-hover/gate:text-stadium-neon transition-colors'}`} />
+                       </div>
+                       <span className="text-xs md:text-sm font-bold text-slate-300 truncate">{gate.gate}</span>
                     </div>
-                    <span className="text-xs md:text-sm font-bold text-slate-300 truncate">{gate.gate}</span>
+                    <div className="text-right shrink-0">
+                       <span className={`text-xs md:text-sm font-black block leading-none ${gate.status === 'critical' ? 'text-stadium-emergency' : gate.status === 'watch' ? 'text-stadium-warning' : 'text-stadium-success'}`}>
+                           {gate.minutes}m
+                       </span>
+                       <span className="text-[8px] text-slate-600 font-bold uppercase tracking-tighter mt-0.5 block">WAIT TIME</span>
+                    </div>
                  </div>
-                 <div className="text-right shrink-0">
-                    <span className={`text-xs md:text-sm font-black block leading-none ${gate.status === 'critical' ? 'text-stadium-emergency' : gate.status === 'watch' ? 'text-stadium-warning' : 'text-stadium-success'}`}>
-                        {gate.minutes}m
-                    </span>
-                    <span className="text-[8px] text-slate-600 font-bold uppercase tracking-tighter mt-0.5 block">WAIT TIME</span>
-                 </div>
+                 
+                 <button 
+                   onClick={() => (window as any).__onNavigateToAR?.()}
+                   className="w-full py-2 bg-white/5 hover:bg-stadium-neon hover:text-stadium-dark text-[8px] md:text-[9px] font-black uppercase tracking-widest rounded-lg border border-white/5 transition-all flex items-center justify-center gap-2 mt-1"
+                 >
+                    <Navigation size={12} />
+                    Start AR Navigation
+                 </button>
               </div>
             ))}
          </div>
