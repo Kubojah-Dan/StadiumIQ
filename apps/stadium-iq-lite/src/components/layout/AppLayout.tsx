@@ -13,7 +13,8 @@ import {
   Bell,
   Zap,
   ShieldAlert,
-  LogOut
+  LogOut,
+  X
 } from 'lucide-react';
 
 interface NavItem {
@@ -50,6 +51,7 @@ export default function AppLayout({
   onNotificationsClick
 }: AppLayoutProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems: NavItem[] = [
     { id: 'dashboard', label: 'Overview', icon: <LayoutDashboard /> },
@@ -59,8 +61,80 @@ export default function AppLayout({
     { id: 'rewards', label: 'Rewards', icon: <Award /> },
   ];
 
+  const handleNavClick = (id: string) => {
+    setActiveTab(id);
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-stadium-dark flex overflow-hidden selection:bg-stadium-neon selection:text-white font-sans">
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-stadium-dark/80 backdrop-blur-sm z-[100] md:hidden"
+            />
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 w-full max-w-[280px] bg-stadium-dark border-r border-white/10 z-[110] md:hidden flex flex-col p-6 pt-[calc(1.5rem+var(--safe-area-top))]"
+            >
+              <div className="flex items-center justify-between mb-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-stadium-neon rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                    <Activity className="text-white" size={24} />
+                  </div>
+                  <h1 className="text-xl font-bold tracking-tight text-white leading-none">StadiumIQ</h1>
+                </div>
+                <button onClick={() => setIsMobileMenuOpen(false)} className="tap-target text-slate-500">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <nav className="flex-1 space-y-2">
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavClick(item.id)}
+                    className={`w-full flex items-center gap-3 p-4 rounded-2xl transition-all ${
+                      activeTab === item.id ? 'bg-stadium-neon/10 text-stadium-neon' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {React.cloneElement(item.icon as React.ReactElement, { size: 20 })}
+                    <span className="font-semibold">{item.label}</span>
+                  </button>
+                ))}
+              </nav>
+
+              <div className="mt-auto pt-6 border-t border-white/5 space-y-2 pb-[var(--safe-area-bottom)]">
+                <button
+                  onClick={() => handleNavClick('settings')}
+                  className={`w-full flex items-center gap-3 p-4 rounded-2xl transition-all ${
+                    activeTab === 'settings' ? 'bg-stadium-neon/10 text-stadium-neon' : 'text-slate-400'
+                  }`}
+                >
+                  <Settings size={20} />
+                  <span className="font-semibold">Settings</span>
+                </button>
+                <button
+                  onClick={onLogout}
+                  className="w-full flex items-center gap-3 p-4 rounded-2xl text-red-400 hover:bg-red-500/10 transition-all font-semibold"
+                >
+                  <LogOut size={20} />
+                  Sign Out
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Sidebar - Desktop Only */}
       <motion.aside
         initial={false}
@@ -142,6 +216,7 @@ export default function AppLayout({
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
         <TopHeader 
           title={title}
+          onMenuClick={() => setIsMobileMenuOpen(true)}
           onNotificationsClick={onNotificationsClick}
           onEmergencyClick={() => setIsEmergency(!isEmergency)}
           isEmergency={isEmergency}
