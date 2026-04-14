@@ -35,9 +35,9 @@ export default function QueueManager({ onNavigateToAR }: { onNavigateToAR: () =>
           />
         </div>
         <div className="flex gap-3 p-1 glass rounded-2xl border-white/5">
-          <TabButton active={activeCategory === 'food'} onClick={() => setActiveCategory('food')}>Food</TabButton>
-          <TabButton active={activeCategory === 'restroom'} onClick={() => setActiveCategory('restroom')}>Restrooms</TabButton>
-          <TabButton active={activeCategory === 'merch'} onClick={() => setActiveCategory('merch')}>Merch</TabButton>
+          <QueueTab active={activeCategory === 'food'} onClick={() => setActiveCategory('food')}>Food</QueueTab>
+          <QueueTab active={activeCategory === 'restroom'} onClick={() => setActiveCategory('restroom')}>Restrooms</QueueTab>
+          <QueueTab active={activeCategory === 'merch'} onClick={() => setActiveCategory('merch')}>Merch</QueueTab>
         </div>
       </div>
 
@@ -56,7 +56,7 @@ export default function QueueManager({ onNavigateToAR }: { onNavigateToAR: () =>
         {activeCategory === 'restroom' ? (
           <div className="space-y-4">
             {queues.map((q) => (
-              <RestroomRow 
+              <CapacityBar 
                 key={q.id}
                 section={q.id} 
                 status={q.occupancy! < 30 ? "High Availability" : q.occupancy! < 70 ? "Nominal Load" : "Peak Occupancy"} 
@@ -72,7 +72,7 @@ export default function QueueManager({ onNavigateToAR }: { onNavigateToAR: () =>
                 key={q.id}
                 id={q.id} 
                 name={q.id} 
-                wait={`${q.wait_time} min`} 
+                wait={q.wait_time} 
                 level={q.wait_time < 5 ? "LOW" : q.wait_time < 15 ? "MED" : "HIGH"} 
                 distance={q.distance || '100m'} 
                 recommended={recommended?.id === q.id}
