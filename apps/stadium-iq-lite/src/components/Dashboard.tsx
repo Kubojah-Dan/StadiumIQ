@@ -56,11 +56,6 @@ export default function Dashboard() {
     [alerts]
   );
 
-  const topIncidents = useMemo(() => 
-    alerts.slice(0, 3), 
-    [alerts]
-  );
-
   // Three.js Scene Persistence Refs
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -68,19 +63,16 @@ export default function Dashboard() {
   const stadiumGroupRef = useRef<THREE.Group | null>(null);
   const frameIdRef = useRef<number | null>(null);
 
-  // Phase 1: Initialization (Only once per mount or stadiumId change)
+  // Phase 1: Initialization
   useEffect(() => {
     if (!mountRef.current) return;
 
-    // Strict Cleanup of any existing renderer before creating new one
     const cleanup = () => {
       if (frameIdRef.current) cancelAnimationFrame(frameIdRef.current);
       if (rendererRef.current) {
-         rendererRef.current.dispose();
          if (rendererRef.current.domElement && mountRef.current?.contains(rendererRef.current.domElement)) {
            mountRef.current.removeChild(rendererRef.current.domElement);
          }
-         rendererRef.current = null;
       }
       if (sceneRef.current) {
         sceneRef.current.traverse((obj) => {
@@ -116,25 +108,17 @@ export default function Dashboard() {
     stadiumGroupRef.current = stadiumGroup;
     const zoneMeshes: Record<string, THREE.Mesh> = {};
 
-    // Base Structures - Enhanced Realism
+    // Build Stadium geometry
     const standGeo = new THREE.TorusGeometry(22, 6, 16, 64);
     const standMat = new THREE.MeshPhongMaterial({ 
       color: 0x1e293b, 
       transparent: true, 
       opacity: 0.2, 
-      wireframe: false,
       shininess: 100 
     });
     const stand = new THREE.Mesh(standGeo, standMat);
     stand.rotation.x = Math.PI / 2;
     stadiumGroup.add(stand);
-
-    // Tier 2 Stand
-    const upperTierGeo = new THREE.TorusGeometry(26, 3, 16, 64);
-    const upperTier = new THREE.Mesh(upperTierGeo, standMat);
-    upperTier.rotation.x = Math.PI / 2;
-    upperTier.position.y = 8;
-    stadiumGroup.add(upperTier);
 
     const pitchGeo = new THREE.PlaneGeometry(28, 38);
     const pitchMat = new THREE.MeshPhongMaterial({ 
@@ -149,7 +133,6 @@ export default function Dashboard() {
     pitch.rotation.x = -Math.PI / 2;
     stadiumGroup.add(pitch);
 
-    // Zone Towers Connected to Data
     const zoneLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
     zoneLetters.forEach((letter, i) => {
       const id = `Zone ${letter}`;
@@ -158,10 +141,10 @@ export default function Dashboard() {
       
       const zoneGeo = new THREE.BoxGeometry(4.5, 3, 4.5);
       const zoneMat = new THREE.MeshStandardMaterial({ 
-        color: 0x3b82f6, 
+        color: 0x06b6d4, 
         transparent: true, 
         opacity: 0.9, 
-        emissive: 0x3b82f6, 
+        emissive: 0x06b6d4, 
         emissiveIntensity: 0.6 
       });
       const mesh = new THREE.Mesh(zoneGeo, zoneMat);
@@ -176,7 +159,7 @@ export default function Dashboard() {
 
     scene.add(stadiumGroup);
     scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const pointLight = new THREE.PointLight(0x3b82f6, 2, 100);
+    const pointLight = new THREE.PointLight(0x06b6d4, 2, 100);
     pointLight.position.set(0, 20, 0);
     scene.add(pointLight);
 
@@ -207,7 +190,6 @@ export default function Dashboard() {
     };
   }, [stadiumId]);
 
-  // Phase 2: Reactive Updates (Mesh density/color only)
   useEffect(() => {
     const targetColor = new THREE.Color();
     const meshes = zoneMeshesRef.current;
@@ -217,10 +199,9 @@ export default function Dashboard() {
       if (data && mesh.material instanceof THREE.MeshStandardMaterial) {
         const density = data.density;
         
-        // Inline color logic for speed
         if (density > 0.8) targetColor.set(0xef4444);
-        else if (density > 0.6) targetColor.set(0xeab308);
-        else targetColor.set(0x3b82f6);
+        else if (density > 0.6) targetColor.set(0xf97316);
+        else targetColor.set(0x06b6d4);
         
         mesh.material.color.lerp(targetColor, 0.15);
         mesh.material.emissive.lerp(targetColor, 0.15);
@@ -232,122 +213,124 @@ export default function Dashboard() {
   }, [twinState.zones]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full font-sans tracking-tight">
-      {/* 3D Heatmap Main Section */}
-      <div className="lg:col-span-2 flex flex-col gap-8">
-        <div className="flex-1 glass-card overflow-hidden relative group border-white/5">
-            <div className="absolute top-10 left-10 z-10">
-                <h2 className="text-2xl font-bold flex items-center gap-3 text-white">
-                    <Activity className="text-stadium-neon" />
-                    Live Strategy Hub
-                </h2>
-                <div className="flex items-center gap-4 mt-2">
-                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold bg-white/5 px-2 py-0.5 rounded">
-                        Visual Twin Engine • v4.2.0
-                    </p>
-                    <span className={`px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-widest ${connected ? 'bg-stadium-success/10 text-stadium-success' : 'bg-stadium-emergency/10 text-stadium-emergency'}`}>
-                        {connectionStatus}
-                    </span>
-                </div>
-            </div>
-            
-            <div className="absolute top-10 right-10 z-10 flex gap-4">
-            <button 
-                onClick={() => setIsDigitalTwin(!isDigitalTwin)}
-                className={`px-5 py-2.5 glass border rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                isDigitalTwin ? 'bg-stadium-neon text-white border-stadium-neon shadow-lg shadow-blue-500/20' : 'text-slate-400 border-white/5 hover:bg-white/5'
-                }`}
-            >
-                <Box size={16} />
-                {isDigitalTwin ? 'Digital Twin: ACTIVE' : '3D View: ON'}
-            </button>
-            </div>
-
-            {loading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-stadium-dark z-20">
-                <div className="text-center">
-                <div className="w-10 h-10 border-2 border-stadium-neon border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Bridging Venue Feed...</p>
-                </div>
-            </div>
-            )}
-
-            <div ref={mountRef} className="w-full h-full min-h-[500px]" />
-            
-            {/* Heatmap Legend */}
-            <div className="absolute bottom-8 left-10 z-10 flex items-center gap-6 bg-stadium-dark/40 backdrop-blur-xl p-4 rounded-2xl border border-white/5 shadow-2xl">
-                <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
-                    <span className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider">Low Density</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
-                    <span className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider">Moderate</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-stadium-emergency"></div>
-                    <span className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider">High Congestion</span>
-                </div>
-            </div>
-        </div>
-
-        {/* Footer Metrics Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            <MetricCard label="Avg. Density" value={`${(avgDensity * 100).toFixed(0)}%`} trend={avgDensity > 0.6 ? 'HIGH' : 'STABLE'} />
-            <MetricCard label="Active Alerts" value={activeAlerts.toString()} trend="Live" />
-            <MetricCard label="Gate Pressure" value="NORMAL" trend="Stable" />
-            <MetricCard label="Signal Health" value={connected ? '100%' : '0%'} trend={connected ? 'ONLINE' : 'ERROR'} />
-        </div>
-      </div>
-
-      <div className="space-y-8 h-full flex flex-col">
-        <StadiumIntelCard stadium={stadium} />
-        <AssistantCard stadiumId={stadiumId} context={{ avgDensity, totalAlerts: activeAlerts, connected }} />
+    <div className="flex flex-col gap-6 md:gap-8 font-sans">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
         
-        {/* Triage Alerts */}
-        <div className="glass-card flex-1 p-8 border-white/5 bg-gradient-to-br from-white/5 to-transparent relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-stadium-neon/5 blur-[80px]" />
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-8 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                <Zap size={16} className="text-stadium-neon" />
-                Live Incident Feed
-            </div>
-            <span className="text-[8px] bg-slate-800 px-2 py-0.5 rounded font-bold opacity-60">AUTO-REFRESH</span>
-          </h2>
+        {/* 3D Heatmap Main Section */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <div className="glass-card aspect-video w-full overflow-hidden relative group border-white/5 min-h-[300px] md:min-h-[500px]">
+              <div className="absolute top-4 left-4 md:top-8 md:left-8 z-10">
+                  <h2 className="text-lg md:text-2xl font-bold flex items-center gap-2 md:gap-3 text-white font-display">
+                      <Activity className="text-stadium-neon" size={20} />
+                      Live Venue Twin
+                  </h2>
+                  <div className="flex items-center gap-2 md:gap-4 mt-1 md:mt-2">
+                      <p className="text-[8px] md:text-[10px] text-slate-500 uppercase tracking-widest font-bold bg-white/5 px-2 py-0.5 rounded">
+                          Tactical Overseer • v4.3
+                      </p>
+                      <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest ${connected ? 'bg-stadium-success/10 text-stadium-success' : 'bg-stadium-error/10 text-stadium-error'}`}>
+                          {connectionStatus}
+                      </span>
+                  </div>
+              </div>
+              
+              <div className="absolute top-4 right-4 md:top-8 md:right-8 z-10">
+              <button 
+                  onClick={() => setIsDigitalTwin(!isDigitalTwin)}
+                  className={`px-3 py-1.5 md:px-5 md:py-2.5 glass border rounded-xl text-[10px] md:text-xs font-bold transition-all flex items-center gap-2 tap-target ${
+                  isDigitalTwin ? 'bg-stadium-neon text-white border-stadium-neon shadow-lg shadow-cyan-500/20' : 'text-slate-400 border-white/5 hover:bg-white/5'
+                  }`}
+              >
+                  <Box size={14} className="md:w-4 md:h-4" />
+                  <span className="hidden xs:inline">{isDigitalTwin ? 'TWIN ACTIVE' : '3D VIEW'}</span>
+              </button>
+              </div>
 
-          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-3 custom-scrollbar">
-            {alerts.length === 0 ? (
-                <div className="h-60 flex flex-col items-center justify-center text-slate-700">
-                    <Navigation size={40} className="opacity-10 mb-4" />
-                    <p className="text-[10px] uppercase font-bold tracking-widest">Monitoring Gate Telemetry</p>
+              {loading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-stadium-dark z-20">
+                    <div className="text-center">
+                    <div className="w-8 h-8 border-2 border-stadium-neon border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Ingesting telemetry...</p>
+                    </div>
                 </div>
-            ) : (
-                alerts.map((p, i) => (
-                <motion.div 
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-5 bg-white/5 rounded-2xl border border-white/5 group/alert hover:bg-white/10 transition-all cursor-default"
-                >
-                    <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-bold text-sm text-white group-hover/alert:text-stadium-neon transition-colors">
-                        {p.zone_id}
-                    </h3>
-                    <span className={`text-[9px] px-2.5 py-1 rounded-lg font-bold uppercase tracking-wider ${
-                        p.alert_level === 'Critical' ? 'bg-stadium-emergency/10 text-stadium-emergency border border-stadium-emergency/20' : 
-                        p.alert_level === 'Warning' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 'bg-stadium-neon/10 text-stadium-neon border border-stadium-neon/20'
-                    }`}>
-                        {p.alert_level}
-                    </span>
-                    </div>
-                    <p className="text-[11px] text-slate-400 leading-relaxed mb-4">{String(p.message || 'Localized surge detected in primary concourse.')}</p>
-                    <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-slate-500 font-bold uppercase">{p.estimated_surge_time ? `ETA: ${p.estimated_surge_time}` : 'Active Status'}</span>
-                    <span className="text-stadium-neon font-bold">{(Number(p.surge_probability || 1) * 100).toFixed(0)}% Certainty</span>
-                    </div>
-                </motion.div>
-                ))
-            )}
+              )}
+
+              <div ref={mountRef} className="w-full h-full" />
+              
+              {/* Heatmap Legend - Responsive Layout */}
+              <div className="absolute bottom-4 left-4 right-4 md:bottom-8 md:left-8 md:right-auto z-10 flex flex-wrap items-center gap-3 md:gap-6 bg-stadium-dark/60 backdrop-blur-xl p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/5 shadow-2xl">
+                  <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-stadium-neon"></div>
+                      <span className="text-[9px] md:text-[10px] font-bold uppercase text-slate-400 tracking-wider">Low</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-stadium-warning"></div>
+                      <span className="text-[9px] md:text-[10px] font-bold uppercase text-slate-400 tracking-wider">Moderate</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-stadium-error"></div>
+                      <span className="text-[9px] md:text-[10px] font-bold uppercase text-slate-400 tracking-wider">High Risk</span>
+                  </div>
+              </div>
+          </div>
+
+          {/* Quick Metrics Grid */}
+          <div className="grid grid-cols-2 xs:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              <MetricCard label="Global Density" value={`${(avgDensity * 100).toFixed(0)}%`} trend={avgDensity > 0.6 ? 'HIGH' : 'STABLE'} />
+              <MetricCard label="Live Alerts" value={activeAlerts.toString()} trend="ACTIVE" />
+              <MetricCard label="Link Health" value={connected ? '100%' : 'OFFLINE'} trend={connected ? 'OPT' : 'ERR'} />
+              <MetricCard label="Est. Triage" value="3m" trend="FAST" />
+          </div>
+        </div>
+
+        {/* Right Sidebar: Intelligence & Alerts */}
+        <div className="flex flex-col gap-6 md:gap-8">
+          <StadiumIntelCard stadium={stadium} />
+          <AssistantCard stadiumId={stadiumId} context={{ avgDensity, totalAlerts: activeAlerts, connected }} />
+          
+          {/* Triage Alerts - Optimized for Mobile Scrolling */}
+          <div className="glass-card flex-1 p-5 md:p-8 border-white/5 bg-gradient-to-br from-white/5 to-transparent relative overflow-hidden flex flex-col min-h-[400px]">
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-stadium-neon/5 blur-[80px]" />
+            <div className="flex items-center justify-between mb-6 md:mb-8">
+              <h2 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                  <Zap size={14} className="text-stadium-neon" />
+                  Signal Triage
+              </h2>
+              <span className="text-[8px] bg-white/5 px-2 py-0.5 rounded font-bold opacity-60">LIVE FEED</span>
+            </div>
+
+            <div className="flex-1 space-y-3 md:space-y-4 overflow-y-auto pr-1 custom-scrollbar">
+              {alerts.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-slate-700 py-10">
+                      <Navigation size={32} className="opacity-10 mb-4" />
+                      <p className="text-[9px] uppercase font-bold tracking-widest">Scanning Gate Arrays...</p>
+                  </div>
+              ) : (
+                  alerts.map((p, i) => (
+                  <motion.div 
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="p-4 md:p-5 bg-white/5 rounded-2xl border border-white/5 hover:border-stadium-neon/20 transition-all"
+                  >
+                      <div className="flex justify-between items-start mb-2 md:mb-3">
+                        <h3 className="font-bold text-xs md:text-sm text-white">{p.zone_id}</h3>
+                        <span className={`text-[8px] md:text-[9px] px-2 py-0.5 rounded-lg font-bold uppercase tracking-wider ${
+                            p.alert_level === 'Critical' ? 'bg-stadium-error/10 text-stadium-error border border-stadium-error/20' : 
+                            p.alert_level === 'Warning' ? 'bg-stadium-warning/10 text-stadium-warning border border-stadium-warning/20' : 'bg-stadium-neon/10 text-stadium-neon border border-stadium-neon/20'
+                        }`}>
+                            {p.alert_level}
+                        </span>
+                      </div>
+                      <p className="text-[10px] md:text-[11px] text-slate-400 leading-relaxed mb-3 md:mb-4 line-clamp-2">{p.message || 'Anomaly detected in sector telemetry.'}</p>
+                      <div className="flex items-center justify-between text-[8px] md:text-[10px]">
+                        <span className="text-slate-500 font-bold uppercase">{p.estimated_surge_time ? `ETA: ${p.estimated_surge_time}` : 'TRIAL STATUS'}</span>
+                        <span className="text-stadium-neon font-bold">{(Number(p.surge_probability || 1) * 100).toFixed(0)}% PROB</span>
+                      </div>
+                  </motion.div>
+                  ))
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -356,15 +339,22 @@ export default function Dashboard() {
 }
 
 function MetricCard({ label, value, trend }: { label: string, value: string, trend: string }) {
+  const isNegative = trend === 'HIGH' || trend === 'ERR';
+  const isPositive = trend === 'STABLE' || trend === 'OPT' || trend === 'ACTIVE';
+
   return (
-    <div className="glass-card p-6 border-white/5 hover:bg-white/5 transition-all relative group overflow-hidden">
+    <div className="glass-card p-4 md:p-6 border-white/5 hover:bg-white/5 transition-all relative group overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-tr from-stadium-neon/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-2">{label}</p>
-      <div className="flex items-end justify-between">
-        <p className="text-2xl font-bold text-white">{value}</p>
-        <p className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${trend === 'HIGH' || trend === 'ERROR' ? 'bg-stadium-emergency/10 text-stadium-emergency' : 'bg-stadium-success/10 text-stadium-success'}`}>{trend}</p>
+      <p className="text-[8px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1 md:mb-2">{label}</p>
+      <div className="flex items-end justify-between gap-2">
+        <p className="text-lg md:text-2xl font-bold text-white truncate">{value}</p>
+        <span className={`text-[8px] md:text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+            isNegative ? 'bg-stadium-error/10 text-stadium-error' : 
+            isPositive ? 'bg-stadium-success/10 text-stadium-success' : 'bg-slate-800 text-slate-400'
+        }`}>
+            {trend}
+        </span>
       </div>
     </div>
   );
 }
-

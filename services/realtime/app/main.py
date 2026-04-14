@@ -49,7 +49,7 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 
 app.add_middleware(
     CORSMiddleware,
@@ -157,7 +157,7 @@ async def redis_listener_loop():
                 # Translate legacy simulator feed into new event types
                 if channel == "stadium_events":
                     event_type = data.get("type")
-                    if event_type == "DENSITY_UPDATE":
+                    if event_type == "DENSITY_UPDATE" or event_type == "CROWD_UPDATE":
                         section_id = data.get("section_id")
                         count = float(data.get("count", 0))
                         camera_id = SECTION_TO_CAMERA.get(section_id, "cameraA")
@@ -172,10 +172,11 @@ async def redis_listener_loop():
                         }
                         channel = "crowd:update"
                     elif event_type == "QUEUE_UPDATE":
-                        gate_id = str(data.get("gate_id", "Gate A"))
-                        zone = "Gate " + gate_id.strip()[-1].upper() if gate_id else "Gate A"
-                        concession_id = GATE_TO_CONCESSION.get(zone, "C-1")
-                        wait_time_sec = float(data.get("wait_time_sec", 0))
+                        gate_id = data.get("gate_id") or data.get("concession_id") or "Gate A"
+                        # Normalize zone name
+                        zone = "Gate " + str(gate_id).strip()[-1].upper() if gate_id else "Gate A"
+                        concession_id = data.get("concession_id") or GATE_TO_CONCESSION.get(zone, "C-1")
+                        wait_time_sec = float(data.get("wait_time_sec", 0)) if "wait_time_sec" in data else float(data.get("estimated_wait_time_minutes", 0)) * 60
                         data = {
                             "stadium_id": stadium_id,
                             "concession_id": concession_id,

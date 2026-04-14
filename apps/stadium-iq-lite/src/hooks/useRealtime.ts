@@ -120,7 +120,7 @@ export function useRealtime() {
         }
       });
 
-      const interval = window.setInterval(() => {
+      const updateInterval = window.setInterval(() => {
         setTwinState(prev => {
           const nextZones = { ...prev.zones };
           Object.keys(nextZones).forEach(z => {
@@ -128,11 +128,36 @@ export function useRealtime() {
             nextZones[z].density = Math.max(0.1, Math.min(1, nextZones[z].density + noise));
             nextZones[z].alertLevel = nextZones[z].density > 0.85 ? 'Critical' : nextZones[z].density > 0.65 ? 'Warning' : 'Normal';
           });
-          return { ...prev, zones: nextZones };
+
+          const nextQueues = { ...prev.queues };
+          Object.keys(nextQueues).forEach(q => {
+             const change = Math.floor((Math.random() - 0.5) * 4);
+             if (nextQueues[q].category === 'restroom') {
+                nextQueues[q].occupancy = Math.max(5, Math.min(100, (nextQueues[q].occupancy || 50) + change * 5));
+             } else {
+                nextQueues[q].wait_time = Math.max(1, Math.min(45, (nextQueues[q].wait_time || 10) + change));
+             }
+          });
+
+          return { ...prev, zones: nextZones, queues: nextQueues };
         });
+
+        // Periodic synthetic alerts
+        if (Math.random() > 0.7) {
+           const zoneLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
+           const randomZone = `Zone ${zoneLetters[Math.floor(Math.random() * zoneLetters.length)]}`;
+           const newAlert: RealtimeAlert = {
+              zone_id: randomZone,
+              alert_level: Math.random() > 0.5 ? 'Warning' : 'Critical',
+              message: `High density detected near ${randomZone}. Flow optimization required.`,
+              surge_probability: 0.7 + Math.random() * 0.2,
+              estimated_surge_time: '5m'
+           };
+           setAlerts(prev => [newAlert, ...prev].slice(0, MAX_ALERTS));
+        }
       }, 5000);
 
-      return () => clearInterval(interval);
+      return () => clearInterval(updateInterval);
     };
 
     connect();

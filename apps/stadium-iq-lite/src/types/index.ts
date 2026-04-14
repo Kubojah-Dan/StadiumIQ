@@ -26,6 +26,7 @@ export type RealtimeEvent = {
 export type RealtimeAlert = {
   zone_id?: string;
   alert_level?: "Normal" | "Warning" | "Critical" | string;
+  message?: string;
   mitigation_recommendation?: string;
   surge_probability?: number;
   estimated_surge_time?: string;
