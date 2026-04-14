@@ -14,14 +14,26 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStadium } from '../context/StadiumContext';
+import { useRealtime } from '../hooks/useRealtime';
 
 export default function ARNavigation() {
   const { stadium } = useStadium();
+  const { alerts } = useRealtime();
   const [mapView, setMapView] = useState(false);
   const [eta, setEta] = useState(3);
   const [distance, setDistance] = useState(50);
-  const [instruction, setInstruction] = useState('Turn right ahead');
+  const [instruction, setInstruction] = useState('Proceed to North Concourse');
   const [voiceActive, setVoiceActive] = useState(false);
+  const [destination, setDestination] = useState('Section 237');
+
+  useEffect(() => {
+    // Sync with nearest alert if exists
+    if (alerts && alerts.length > 0) {
+      setInstruction(`Caution: ${alerts[0].message}`);
+    } else {
+      setInstruction('Route Optimized: Proceed to Gate D');
+    }
+  }, [alerts]);
 
   useEffect(() => {
     // Simulate dynamic updates
@@ -113,14 +125,15 @@ export default function ARNavigation() {
               initial={{ opacity: 0, scale: 1.1 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="absolute inset-0 bg-[#0f172a] p-10 flex items-center justify-center"
+              className="absolute inset-0 bg-[#0f172a] p-10 flex items-center justify-center cursor-pointer"
+              onClick={() => setMapView(false)}
             >
               {/* Mock Schematic Map */}
-              <div className="w-full h-full relative rounded-3xl overflow-hidden border border-white/10">
+              <div className="w-full h-full relative rounded-3xl overflow-hidden border border-white/10 group">
                 <img 
                   src="https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200" 
                   alt="Stadium Map" 
-                  className="w-full h-full object-cover opacity-20"
+                  className="w-full h-full object-cover opacity-20 group-hover:scale-110 transition-transform duration-1000"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-stadium-dark via-transparent to-transparent" />
                 
@@ -140,7 +153,10 @@ export default function ARNavigation() {
 
         {/* Header Controls */}
         <div className="absolute top-16 left-6 right-6 z-20 flex justify-between items-center">
-          <button className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-white hover:bg-white/10 transition-all border-white/10 backdrop-blur-md">
+          <button 
+            onClick={() => window.history.back()}
+            className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-white hover:bg-white/10 transition-all border-white/10 backdrop-blur-md"
+          >
             <ArrowLeft size={20} />
           </button>
           <div className="px-5 py-2 glass rounded-full text-[9px] font-black uppercase tracking-[0.3em] text-stadium-neon border-stadium-neon/30 backdrop-blur-md">

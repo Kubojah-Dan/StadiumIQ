@@ -33,7 +33,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
             onClick={() => setShowRegister(true)}
             className="text-sm font-black text-slate-400 hover:text-white transition uppercase tracking-widest"
           >
-            Sign In
+            Sign In / Sign Up
           </button>
           <button 
             onClick={onEnter}

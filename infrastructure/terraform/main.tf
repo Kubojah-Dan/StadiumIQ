@@ -150,10 +150,10 @@ resource "google_cloud_run_v2_service" "web" {
 
   template {
     containers {
-      image = "${var.gcp_region}-docker.pkg.dev/${var.gcp_project}/stadiumiq/web:latest"
+      image = "${var.gcp_region}-docker.pkg.dev/${var.gcp_project}/stadiumiq/lite:latest"
 
       ports {
-        container_port = 3000
+        container_port = 80
       }
 
       env {

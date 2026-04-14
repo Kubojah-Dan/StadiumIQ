@@ -45,9 +45,9 @@
 
 @utility glass {
   background-color: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(24px);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.2);
 }
 
 @utility glass-card {
@@ -55,8 +55,8 @@
 }
 
 @utility glass-nav {
-  background-color: rgba(2, 6, 23, 0.6);
-  backdrop-filter: blur(40px);
+  background-color: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 

@@ -21,6 +21,11 @@ export default function AssistantCard({ stadiumId, context }: { stadiumId: strin
     const fetchRecommendations = async () => {
       try {
         setLoading(true);
+        // Short-circuit for Lite/Demo mode to prevent 404 console clutter
+        if (!window.location.search.includes('enable_ai_api')) {
+            throw new Error("Demo Mode");
+        }
+
         const response = await fetch('/api/assistant/recommendations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

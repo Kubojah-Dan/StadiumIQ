@@ -4,11 +4,16 @@ import { motion } from 'framer-motion';
 
 export function SustainabilityDashboard() {
   const { stadium } = useStadium();
-  // Generate semi-consistent mock data based on stadium ID
-  const seed = stadium.id.length;
-  const carbon = (12.4 + seed * 0.5).toFixed(1);
-  const energy = (800 + seed * 20);
-  const renewable = (30 + seed % 40);
+  const { twinState } = useRealtime();
+  
+  // Calculate live seed based on aggregate gate flow
+  const gates = Object.values(twinState.queues || {}).filter(q => q.category === 'food' || q.category === 'merch');
+  const totalWait = gates.reduce((acc, g) => acc + (g.wait_time || 0), 0);
+  const liveSeed = totalWait / 10;
+
+  const carbon = (12.4 + liveSeed * 0.5).toFixed(1);
+  const energy = (800 + liveSeed * 2);
+  const renewable = (30 + Math.floor(liveSeed) % 40);
 
   return (
     <div className="space-y-6">
@@ -36,8 +41,13 @@ export function SustainabilityDashboard() {
 
 export function FanRewards() {
   const { stadium } = useStadium();
-  const seed = stadium.id.length;
-  const credits = (3000 + seed * 125).toLocaleString();
+  const { twinState } = useRealtime();
+  
+  // Aggregate zone density to drive loyalty point velocity
+  const zones = Object.values(twinState.zones || {});
+  const avgDensity = zones.length > 0 ? zones.reduce((acc, z) => acc + (z.density || 0), 0) / zones.length : 0;
+  
+  const credits = (3000 + Math.floor(avgDensity * 1250)).toLocaleString();
 
   return (
     <div className="space-y-6">
@@ -66,6 +76,7 @@ export function FanRewards() {
 }
 
 import { useStadium } from '../context/StadiumContext';
+import { useRealtime } from '../hooks/useRealtime';
 
 function EcoMetric({ label, value, sub, icon }) {
   return (

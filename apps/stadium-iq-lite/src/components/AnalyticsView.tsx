@@ -2,10 +2,16 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, PieChart, Download, Calendar, Activity } from 'lucide-react';
 import { useStadium } from '../context/StadiumContext';
+import { useRealtime } from '../hooks/useRealtime';
 
 export default function AnalyticsView() {
   const { stadium } = useStadium();
-  const seed = stadium.id.length;
+  const { twinState } = useRealtime();
+  
+  // Calculate dynamic seed based on average density to make charts 'jitter' with real data
+  const zonesArray = Object.values(twinState.zones || {});
+  const avgDensity = zonesArray.length > 0 ? zonesArray.reduce((acc, z) => acc + (z.density || 0), 0) / zonesArray.length : 0;
+  const seed = avgDensity * 50;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

@@ -10,9 +10,11 @@ export function useRealtime() {
   const [alerts, setAlerts] = useState<RealtimeAlert[]>([]);
   const [connected, setConnected] = useState(false);
   const [isSimulator, setIsSimulator] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<string>("Initializing...");
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<number | null>(null);
+  const statusRef = useRef({ connected: false, isSimulator: false });
 
   useEffect(() => {
     let cancelled = false;
@@ -24,26 +26,30 @@ export function useRealtime() {
       // Reset state for new stadium
       setConnected(false);
       setIsSimulator(false);
+      setConnectionStatus("Discovering Gateway...");
+      statusRef.current = { connected: false, isSimulator: false };
 
       try {
-        // Attempt discovery
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const host = window.location.hostname;
         let wsUrl = '';
 
         if (host.includes('localhost') || host.includes('127.0.0.1')) {
           wsUrl = `${protocol}://${host}:8001/ws/dashboard?stadium_id=${stadiumId}&token=admin`;
-        } else if (host.includes('stadiumiq-web')) {
-          const realtimeHost = host.replace('stadiumiq-web', 'stadiumiq-realtime');
+        } else if (host.includes('stadiumiq-web') || host.includes('stadiumiq-lite')) {
+          const realtimeHost = host.replace('stadiumiq-web', 'stadiumiq-realtime').replace('stadiumiq-lite', 'stadiumiq-realtime');
           wsUrl = `${protocol}://${realtimeHost}/ws/dashboard?stadium_id=${stadiumId}&token=admin`;
         }
 
         if (wsUrl) {
+          setConnectionStatus(`Connecting to ${wsUrl.includes(':8001') ? 'Local Hub (8001)...' : 'Cloud Node...'}`);
           const ws = new WebSocket(wsUrl);
           wsRef.current = ws;
 
           ws.onopen = () => {
             setConnected(true);
+            setConnectionStatus("Operational: Real-time Link Active");
+            statusRef.current.connected = true;
             attempt = 0;
             console.log(`Connected to Realtime: ${stadiumId}`);
           };
@@ -52,14 +58,14 @@ export function useRealtime() {
             try {
               const payload = JSON.parse(event.data) as RealtimeEvent;
               handleRealtimeEvent(payload, setTwinState, setAlerts);
-            } catch (e) {
-              console.error("Parse error", e);
-            }
+            } catch (e) { /* ignore parse err */ }
           };
 
           ws.onclose = () => {
             if (cancelled) return;
             setConnected(false);
+            setConnectionStatus("Link Closed. Retrying...");
+            statusRef.current.connected = false;
             attempt++;
             const delay = Math.min(10000, 1000 * Math.pow(1.5, attempt));
             reconnectRef.current = window.setTimeout(connect, delay);
@@ -67,25 +73,29 @@ export function useRealtime() {
 
           // Fallback to simulator if no connection after 3 seconds
           window.setTimeout(() => {
-            if (!connected && !cancelled && ws.readyState !== WebSocket.OPEN) {
+            if (!statusRef.current.connected && !cancelled && ws.readyState !== WebSocket.OPEN) {
               console.warn("WebSocket timeout, starting simulator");
-              startSimulator();
+              startSimulator("Gateway Unreachable (Port 8001)");
             }
           }, 3000);
         } else {
-          startSimulator();
+          startSimulator("No Hub Configured");
         }
       } catch (e) {
-        startSimulator();
+        startSimulator("Connection Error");
       }
     };
 
-    const startSimulator = () => {
-      if (connected || cancelled) return;
+    const startSimulator = (reason: string) => {
+      if (statusRef.current.connected || statusRef.current.isSimulator || cancelled) return;
+      
       setIsSimulator(true);
       setConnected(true);
+      setConnectionStatus(`Simulator Active: ${reason}`);
+      statusRef.current.isSimulator = true;
+      statusRef.current.connected = true;
       
-      // Initial Sync with more comprehensive data
+      // Initial Sync
       const initialZones: Record<string, any> = {};
       ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'].forEach(letter => {
         const id = `Zone ${letter}`;
@@ -110,7 +120,6 @@ export function useRealtime() {
         }
       });
 
-      // Simulation Interval - more dynamic
       const interval = window.setInterval(() => {
         setTwinState(prev => {
           const nextZones = { ...prev.zones };
@@ -119,18 +128,7 @@ export function useRealtime() {
             nextZones[z].density = Math.max(0.1, Math.min(1, nextZones[z].density + noise));
             nextZones[z].alertLevel = nextZones[z].density > 0.85 ? 'Critical' : nextZones[z].density > 0.65 ? 'Warning' : 'Normal';
           });
-
-          const nextQueues = { ...prev.queues };
-          Object.keys(nextQueues).forEach(q => {
-            const noise = Math.floor((Math.random() - 0.5) * 4);
-            nextQueues[q].wait_time = Math.max(1, Math.min(30, nextQueues[q].wait_time + noise));
-            if (nextQueues[q].occupancy !== undefined) {
-              const occNoise = Math.floor((Math.random() - 0.5) * 10);
-              nextQueues[q].occupancy = Math.max(5, Math.min(100, nextQueues[q].occupancy + occNoise));
-            }
-          });
-
-          return { zones: nextZones, queues: nextQueues };
+          return { ...prev, zones: nextZones };
         });
       }, 5000);
 

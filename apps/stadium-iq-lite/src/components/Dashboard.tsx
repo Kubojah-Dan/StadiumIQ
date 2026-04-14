@@ -20,10 +20,25 @@ import { useRealtime } from '../hooks/useRealtime';
 import StadiumIntelCard from './StadiumIntelCard';
 import AssistantCard from './AssistantCard';
 
+// Global Singleton Renderer for Three.js to prevent WebGL Context Leaks
+let globalRenderer: THREE.WebGLRenderer | null = null;
+const getRenderer = () => {
+  if (!globalRenderer) {
+    globalRenderer = new THREE.WebGLRenderer({ 
+      antialias: true, 
+      alpha: true, 
+      powerPreference: 'high-performance',
+      preserveDrawingBuffer: false 
+    });
+    globalRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  }
+  return globalRenderer;
+};
+
 export default function Dashboard() {
   const mountRef = useRef<HTMLDivElement>(null);
   const { stadiumId, stadium } = useStadium();
-  const { twinState, alerts, connected } = useRealtime();
+  const { twinState, alerts, connected, connectionStatus } = useRealtime();
   
   const [isDigitalTwin, setIsDigitalTwin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -45,139 +60,175 @@ export default function Dashboard() {
     [alerts]
   );
 
-  // Feature #3: 3D Heatmap Logic
+  // Three.js Scene Persistence Refs
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const zoneMeshesRef = useRef<Record<string, THREE.Mesh>>({});
+  const stadiumGroupRef = useRef<THREE.Group | null>(null);
+  const frameIdRef = useRef<number | null>(null);
+
+  // Phase 1: Initialization (Only once per mount or stadiumId change)
   useEffect(() => {
     if (!mountRef.current) return;
+
+    // Strict Cleanup of any existing renderer before creating new one
+    const cleanup = () => {
+      if (frameIdRef.current) cancelAnimationFrame(frameIdRef.current);
+      if (rendererRef.current) {
+         rendererRef.current.dispose();
+         if (rendererRef.current.domElement && mountRef.current?.contains(rendererRef.current.domElement)) {
+           mountRef.current.removeChild(rendererRef.current.domElement);
+         }
+         rendererRef.current = null;
+      }
+      if (sceneRef.current) {
+        sceneRef.current.traverse((obj) => {
+          if (obj instanceof THREE.Mesh) {
+            obj.geometry.dispose();
+            if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+            else obj.material.dispose();
+          }
+        });
+        sceneRef.current = null;
+      }
+    };
+
+    cleanup();
 
     const width = mountRef.current.clientWidth;
     const height = mountRef.current.clientHeight;
 
-    // Digital Twin Visualization Engine
     const scene = new THREE.Scene();
-    scene.background = null; // Use transparent for CSS background
+    sceneRef.current = scene;
+    scene.background = null;
     
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    camera.position.set(0, 30, 45); // Elevated view
+    camera.position.set(0, 30, 45);
     camera.lookAt(0, 0, 0);
 
-     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    const renderer = getRenderer();
+    rendererRef.current = renderer;
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     mountRef.current.appendChild(renderer.domElement);
 
     const stadiumGroup = new THREE.Group();
+    stadiumGroupRef.current = stadiumGroup;
     const zoneMeshes: Record<string, THREE.Mesh> = {};
 
-    // Create Procedural Stadium
-    // 1. Concrete Base / Stand Structure (Circular)
-    const standGeo = new THREE.TorusGeometry(20, 4, 16, 60);
+    // Base Structures - Enhanced Realism
+    const standGeo = new THREE.TorusGeometry(22, 6, 16, 64);
     const standMat = new THREE.MeshPhongMaterial({ 
       color: 0x1e293b, 
       transparent: true, 
-      opacity: 0.3, 
-      wireframe: true 
+      opacity: 0.2, 
+      wireframe: false,
+      shininess: 100 
     });
     const stand = new THREE.Mesh(standGeo, standMat);
     stand.rotation.x = Math.PI / 2;
     stadiumGroup.add(stand);
 
-    // 2. Play Field
-    const pitchGeo = new THREE.PlaneGeometry(24, 32);
+    // Tier 2 Stand
+    const upperTierGeo = new THREE.TorusGeometry(26, 3, 16, 64);
+    const upperTier = new THREE.Mesh(upperTierGeo, standMat);
+    upperTier.rotation.x = Math.PI / 2;
+    upperTier.position.y = 8;
+    stadiumGroup.add(upperTier);
+
+    const pitchGeo = new THREE.PlaneGeometry(28, 38);
     const pitchMat = new THREE.MeshPhongMaterial({ 
       color: 0x064e3b, 
       transparent: true, 
-      opacity: 0.4,
-      emissive: 0x059669,
-      emissiveIntensity: 0.2
+      opacity: 0.6, 
+      emissive: 0x059669, 
+      emissiveIntensity: 0.3,
+      side: THREE.DoubleSide
     });
     const pitch = new THREE.Mesh(pitchGeo, pitchMat);
     pitch.rotation.x = -Math.PI / 2;
     stadiumGroup.add(pitch);
 
-    // 3. Heatmap Zone Towers (Representing sensors/sections)
+    // Zone Towers Connected to Data
     const zoneLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
     zoneLetters.forEach((letter, i) => {
       const id = `Zone ${letter}`;
       const angle = (i / zoneLetters.length) * Math.PI * 2;
-      const radius = 22;
+      const radius = 24;
       
-      const zoneGeo = new THREE.BoxGeometry(4, 2, 4);
+      const zoneGeo = new THREE.BoxGeometry(4.5, 3, 4.5);
       const zoneMat = new THREE.MeshStandardMaterial({ 
         color: 0x3b82f6, 
         transparent: true, 
-        opacity: 0.8,
-        emissive: 0x3b82f6,
-        emissiveIntensity: 0.5
+        opacity: 0.9, 
+        emissive: 0x3b82f6, 
+        emissiveIntensity: 0.6 
       });
       const mesh = new THREE.Mesh(zoneGeo, zoneMat);
       
-      mesh.position.set(Math.cos(angle) * radius, 1, Math.sin(angle) * radius);
-      mesh.lookAt(0, 1, 0);
+      mesh.position.set(Math.cos(angle) * radius, 1.5, Math.sin(angle) * radius);
+      mesh.lookAt(0, 1.5, 0);
       
       stadiumGroup.add(mesh);
       zoneMeshes[id] = mesh;
     });
+    zoneMeshesRef.current = zoneMeshes;
 
     scene.add(stadiumGroup);
-
-    // Dynamic Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-    
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
     const pointLight = new THREE.PointLight(0x3b82f6, 2, 100);
     pointLight.position.set(0, 20, 0);
     scene.add(pointLight);
 
     setLoading(false);
 
-    const targetColor = new THREE.Color();
     const animate = () => {
-      stadiumGroup.rotation.y += 0.002; // Slow rotation for digital twin feel
-      
-      // Update heatmap based on REAL realtime data
-      Object.entries(zoneMeshes).forEach(([id, mesh]) => {
-        const data = twinState.zones[id];
-        if (data && mesh.material instanceof THREE.MeshStandardMaterial) {
-          const density = data.density;
-          // Interpolate color: Blue (safe) -> Yellow (watch) -> Red (danger)
-          if (density > 0.8) {
-             targetColor.set(0xef4444); // Red
-          } else if (density > 0.6) {
-             targetColor.set(0xeab308); // Yellow
-          } else {
-             targetColor.set(0x3b82f6); // Blue
-          }
-          
-          mesh.material.color.lerp(targetColor, 0.05);
-          mesh.material.emissive.lerp(targetColor, 0.05);
-          mesh.material.emissiveIntensity = 0.2 + density * 1.5;
-          mesh.scale.y = 1 + density * 8; // Height reflects density
-          mesh.position.y = (1 + density * 8) / 2; // Keep base on "ground"
-        }
-      });
-
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
+      if (stadiumGroupRef.current) stadiumGroupRef.current.rotation.y += 0.002;
+      if (rendererRef.current && sceneRef.current) {
+        rendererRef.current.render(sceneRef.current, camera);
+      }
+      frameIdRef.current = requestAnimationFrame(animate);
     };
-
     animate();
 
     const handleResize = () => {
-      const w = mountRef.current?.clientWidth || width;
-      const h = mountRef.current?.clientHeight || height;
+      if (!mountRef.current || !rendererRef.current) return;
+      const w = mountRef.current.clientWidth;
+      const h = mountRef.current.clientHeight;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
+      rendererRef.current.setSize(w, h);
     };
     window.addEventListener('resize', handleResize);
 
-    const currentMount = mountRef.current;
-    
     return () => {
       window.removeEventListener('resize', handleResize);
-      currentMount?.removeChild(renderer.domElement);
+      cleanup();
     };
-  }, [stadiumId, twinState.zones]);
+  }, [stadiumId]);
+
+  // Phase 2: Reactive Updates (Mesh density/color only)
+  useEffect(() => {
+    const targetColor = new THREE.Color();
+    const meshes = zoneMeshesRef.current;
+    
+    Object.entries(meshes).forEach(([id, mesh]) => {
+      const data = twinState.zones[id];
+      if (data && mesh.material instanceof THREE.MeshStandardMaterial) {
+        const density = data.density;
+        
+        // Inline color logic for speed
+        if (density > 0.8) targetColor.set(0xef4444);
+        else if (density > 0.6) targetColor.set(0xeab308);
+        else targetColor.set(0x3b82f6);
+        
+        mesh.material.color.lerp(targetColor, 0.15);
+        mesh.material.emissive.lerp(targetColor, 0.15);
+        mesh.material.emissiveIntensity = 0.2 + density * 1.5;
+        mesh.scale.y = 1 + density * 8;
+        mesh.position.y = (1 + density * 8) / 2;
+      }
+    });
+  }, [twinState.zones]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full font-sans tracking-tight">
@@ -194,7 +245,7 @@ export default function Dashboard() {
                         Visual Twin Engine • v4.2.0
                     </p>
                     <span className={`px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-widest ${connected ? 'bg-stadium-success/10 text-stadium-success' : 'bg-stadium-emergency/10 text-stadium-emergency'}`}>
-                        {connected ? 'Real-time Sync' : 'Offline Mode'}
+                        {connectionStatus}
                     </span>
                 </div>
             </div>

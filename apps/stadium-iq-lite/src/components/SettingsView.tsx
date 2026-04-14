@@ -134,9 +134,13 @@ export default function SettingsView({ userProfile, onUpdateProfile }: { userPro
 
                    <div className="flex justify-end pt-10">
                       <button 
-                        onClick={() => showToast("Nexus Profile Synchronized")}
+                        onClick={() => {
+                          showToast("Nexus Profile Synchronized");
+                          // Persist to local storage for realism
+                          localStorage.setItem('siq_profile', JSON.stringify(userProfile));
+                        }}
                         className="px-10 py-4 bg-stadium-neon text-stadium-dark font-black rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:scale-105 transition-all text-xs uppercase tracking-widest"
-                      >Update Nexus Profile</button>
+                      >Synchronize Profile</button>
                    </div>
                 </div>
               )}

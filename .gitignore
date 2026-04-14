@@ -35,16 +35,28 @@ apps/mobile/
 apps/mobile/.expo/
 apps/mobile/.expo-shared/
 
-# Optional static assets not required for challenge review
-apps/web/app/fonts/
-
-# Environment and secrets — only ignore real .env files, NOT the example
+# Environment and secrets
 .env
 .env.local
 .env.*.local
 *.pem
 *.key
 key.json
+
+# Heavy Media & Binary Assets (Strict 1MB Limit Enforcement)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.webp
+*.mp4
+*.webm
+*.pdf
+*.zip
+*.gz
+*.tar
+*.iso
 
 # OS / editor noise
 .DS_Store
