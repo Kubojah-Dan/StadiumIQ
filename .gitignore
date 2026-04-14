@@ -39,6 +39,7 @@ apps/mobile/.expo-shared/
 .env
 .env.local
 .env.*.local
+.env.example
 *.pem
 *.key
 key.json

@@ -10,7 +10,9 @@ import {
   Award,
   Database,
   BarChart3,
-  LayoutDashboard
+  LayoutDashboard,
+  LogOut,
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
@@ -34,6 +36,7 @@ export default function App() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { connected, connectionStatus } = useRealtime();
 
   const [userProfile, setUserProfile] = useState({
@@ -179,18 +182,59 @@ export default function App() {
               <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-stadium-emergency rounded-full border-2 border-stadium-dark"></span>
             </button>
             <div className="h-8 w-px bg-white/10 mx-1"></div>
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`flex items-center gap-3 bg-white/5 hover:bg-white/10 p-2 pr-5 rounded-2xl border border-white/5 transition-all group ${activeTab === 'settings' ? 'border-stadium-neon/40 ring-1 ring-stadium-neon/20' : ''}`}
-            >
-              <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg border border-white/10">
-                <img src={userProfile.image} alt="User" className="w-full h-full object-cover" />
-              </div>
-              <div className="hidden lg:block text-left">
-                <p className="text-sm font-bold text-white leading-none">{userProfile.name}</p>
-                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-1">{userProfile.role}</p>
-              </div>
-            </button>
+            
+            <div className="relative">
+              <button
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className={`flex items-center gap-3 bg-white/5 hover:bg-white/10 p-2 pr-5 rounded-2xl border border-white/5 transition-all group ${activeTab === 'settings' || isProfileOpen ? 'border-stadium-neon/40 ring-1 ring-stadium-neon/20' : ''}`}
+              >
+                <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg border border-white/10">
+                  <img src={userProfile.image} alt="User" className="w-full h-full object-cover" />
+                </div>
+                <div className="hidden lg:block text-left">
+                  <p className="text-sm font-bold text-white leading-none">{userProfile.name}</p>
+                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-1">{userProfile.role}</p>
+                </div>
+              </button>
+
+              <AnimatePresence>
+                {isProfileOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                      className="absolute top-full right-0 mt-3 w-56 glass border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                    >
+                      <div className="p-2 space-y-1">
+                        <button
+                          onClick={() => {
+                            setActiveTab('settings');
+                            setIsProfileOpen(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+                        >
+                          <Settings size={16} />
+                          Settings
+                        </button>
+                        <div className="h-px bg-white/5 mx-2" />
+                        <button
+                          onClick={() => {
+                            setIsProfileOpen(false);
+                            setView('landing');
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/10 transition-all text-left"
+                        >
+                          <LogOut size={16} />
+                          Log Out
+                        </button>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 

@@ -23,6 +23,19 @@ export default function SettingsView({ userProfile, onUpdateProfile }: { userPro
   const [mfaSecret, setMfaSecret] = useState('');
   const [mfaCode, setMfaCode] = useState('');
   const [toast, setToast] = useState<string | null>(null);
+  
+  // Credentials state
+  const [email, setEmail] = useState('admin@stadiumiq.demo');
+  const [password, setPassword] = useState('admin');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('siq_credentials');
+    if (saved) {
+      const { email: savedEmail, password: savedPass } = JSON.parse(saved);
+      setEmail(savedEmail);
+      setPassword(savedPass);
+    }
+  }, []);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -123,7 +136,11 @@ export default function SettingsView({ userProfile, onUpdateProfile }: { userPro
                         value={userProfile.name} 
                         onChange={(val) => onUpdateProfile({ ...userProfile, name: val })} 
                       />
-                      <InputGroup label="Email Node" value="admin@stadiumiq.demo" readonly />
+                      <InputGroup 
+                        label="Email Node" 
+                        value={email} 
+                        onChange={(val) => setEmail(val)}
+                      />
                       <InputGroup 
                         label="Position" 
                         value={userProfile.role} 
@@ -138,6 +155,7 @@ export default function SettingsView({ userProfile, onUpdateProfile }: { userPro
                           showToast("Nexus Profile Synchronized");
                           // Persist to local storage for realism
                           localStorage.setItem('siq_profile', JSON.stringify(userProfile));
+                          localStorage.setItem('siq_credentials', JSON.stringify({ email, password }));
                         }}
                         className="px-10 py-4 bg-stadium-neon text-stadium-dark font-black rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:scale-105 transition-all text-xs uppercase tracking-widest"
                       >Synchronize Profile</button>
@@ -153,8 +171,13 @@ export default function SettingsView({ userProfile, onUpdateProfile }: { userPro
                         Password Hardening
                       </h4>
                       <div className="space-y-4 max-w-lg">
-                        <InputGroup label="Current Encryption Key (Password)" type="password" />
-                        <InputGroup label="New Key" type="password" />
+                        <InputGroup 
+                          label="System Access Key (Password)" 
+                          type="password" 
+                          value={password}
+                          onChange={(val) => setPassword(val)}
+                        />
+                        <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest px-1">Note: Synchronize Profile to commit security changes.</p>
                       </div>
                    </div>
 

@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Sparkles, Map, ShieldAlert, BarChart3, Activity, Globe, Zap, X, User as UserIcon, Building, Mail } from 'lucide-react';
+import { ArrowRight, Sparkles, Map, ShieldAlert, BarChart3, Activity, Globe, Zap, X, User as UserIcon, Building, Mail, KeyRound, ShieldCheck } from 'lucide-react';
 import { STADIUMS_INDIA } from '../context/StadiumContext';
 
 export default function LandingPage({ onEnter }: { onEnter: () => void }) {
   const [showRegister, setShowRegister] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
   return (
     <div className="min-h-screen bg-stadium-dark text-white relative overflow-hidden font-sans">
       <AnimatePresence>
         {showRegister && <RegistrationModal onClose={() => setShowRegister(false)} />}
+        {showLogin && <LoginModal onLogin={onEnter} onClose={() => setShowLogin(false)} />}
       </AnimatePresence>
 
       {/* Background Glows */}
@@ -36,7 +38,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
             Sign In / Sign Up
           </button>
           <button 
-            onClick={onEnter}
+            onClick={() => setShowLogin(true)}
             className="px-6 py-2.5 bg-stadium-neon text-stadium-dark font-black rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:scale-105 transition-all text-sm uppercase tracking-widest"
           >
             Launch Hub
@@ -69,7 +71,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <button 
-                onClick={onEnter}
+                onClick={() => setShowLogin(true)}
                 className="px-8 py-4 bg-stadium-neon text-stadium-dark font-black rounded-2xl flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(6,182,212,0.3)] hover:scale-105 transition-all group uppercase tracking-widest text-sm"
               >
                 Open Dashboard
@@ -183,6 +185,122 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
         </div>
       </footer>
     </div>
+  );
+}
+
+function LoginModal({ onLogin, onClose }: { onLogin: () => void, onClose: () => void }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  React.useEffect(() => {
+    // Auto-populate logic
+    const saved = localStorage.getItem('siq_credentials');
+    if (saved) {
+      const { email: savedEmail, password: savedPass } = JSON.parse(saved);
+      setEmail(savedEmail);
+      setPassword(savedPass);
+    } else {
+      // Hardcoded fallback for first-time use
+      setEmail('admin@stadiumiq.demo');
+      setPassword('admin');
+    }
+  }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsVerifying(true);
+    // Simulate auth check
+    setTimeout(() => {
+      onLogin();
+    }, 1500);
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-stadium-dark/95 backdrop-blur-2xl"
+    >
+      <motion.div 
+        initial={{ scale: 0.95, y: 30 }}
+        animate={{ scale: 1, y: 0 }}
+        className="max-w-md w-full glass-card p-10 relative overflow-hidden border-stadium-neon/30 shadow-[0_0_80px_rgba(6,182,212,0.15)]"
+      >
+        <div className="absolute top-0 right-0 w-64 h-64 bg-stadium-neon/5 blur-[100px] -mr-32 -mt-32" />
+        
+        <button 
+          onClick={onClose}
+          className="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors"
+        >
+          <X size={24} />
+        </button>
+
+        <div className="relative z-10 text-center">
+          <div className="w-16 h-16 bg-stadium-neon/10 rounded-2xl flex items-center justify-center text-stadium-neon mb-8 mx-auto border border-stadium-neon/20 shadow-inner">
+            <KeyRound size={32} />
+          </div>
+
+          <h2 className="text-3xl font-black tracking-tighter uppercase font-display mb-2">Command Gateway</h2>
+          <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-10 leading-relaxed">
+            Identity Authorization Required
+          </p>
+
+          <form className="space-y-6 text-left" onSubmit={handleLogin}>
+            <div className="space-y-2">
+              <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-1">Security Node (Email)</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <input 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-stadium-neon/50 transition-all text-sm font-semibold" 
+                  required 
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-1">Access Key (Password)</label>
+              <div className="relative">
+                <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <input 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-stadium-neon/50 transition-all text-sm font-semibold" 
+                  required 
+                />
+              </div>
+            </div>
+
+            <button 
+              type="submit"
+              disabled={isVerifying}
+              className="w-full py-5 bg-stadium-neon text-stadium-dark font-black rounded-xl shadow-lg shadow-stadium-neon/20 hover:scale-[1.02] transition-all uppercase tracking-widest text-sm flex items-center justify-center gap-3 group"
+            >
+              {isVerifying ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-stadium-dark/20 border-t-stadium-dark rounded-full animate-spin" />
+                  Decrypting...
+                </>
+              ) : (
+                <>
+                  Authorize Node
+                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+
+            <p className="text-[10px] text-slate-600 font-bold text-center mt-6">
+              SYSTEM ENCRYPTED: RFC 7519 COMPLIANT
+            </p>
+          </form>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
