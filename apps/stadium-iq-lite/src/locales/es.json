@@ -1,0 +1,33 @@
+{
+  "nav": {
+    "overview": "Vista General",
+    "analytics": "Analítica",
+    "map": "Mapa de Sede",
+    "queues": "Colas",
+    "notifications": "Notificaciones",
+    "command_center": "Centro de Mando",
+    "settings": "Ajustes",
+    "emergency": "Emergencia"
+  },
+  "dashboard": {
+    "live_status": "Estado en Vivo",
+    "connected": "Conectado",
+    "offline": "Fuera de Línea",
+    "syncing": "Sincronizando Datos",
+    "connected_count": "Sensores Conectados"
+  },
+  "settings": {
+    "governance": "Gobernanza",
+    "profile": "Perfil",
+    "security": "Seguridad y 2FA",
+    "alerts": "Alertas",
+    "language": "Idioma",
+    "sync_profile": "Sincronizar Perfil",
+    "logout": "Cerrar Sesión"
+  },
+  "emergency": {
+    "alert": "ALERTA DE EMERGENCIA",
+    "status": "Nivel 1 Rojo",
+    "action": "Triaje Inmediato Requerido"
+  }
+}

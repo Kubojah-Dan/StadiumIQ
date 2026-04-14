@@ -1,0 +1,33 @@
+{
+  "nav": {
+    "overview": "Overview",
+    "analytics": "Analytics",
+    "map": "Venue Map",
+    "queues": "Queues",
+    "notifications": "Notifications",
+    "command_center": "Command Center",
+    "settings": "Settings",
+    "emergency": "Emergency"
+  },
+  "dashboard": {
+    "live_status": "Live Status",
+    "connected": "Connected",
+    "offline": "Offline",
+    "syncing": "Syncing Data",
+    "connected_count": "Connected Sensors"
+  },
+  "settings": {
+    "governance": "Governance",
+    "profile": "Profile",
+    "security": "Security & 2FA",
+    "alerts": "Alerts",
+    "language": "Language",
+    "sync_profile": "Synchronize Profile",
+    "logout": "Log Out"
+  },
+  "emergency": {
+    "alert": "EMERGENCY ALERT",
+    "status": "Level 1 Red",
+    "action": "Immediate Triage Required"
+  }
+}

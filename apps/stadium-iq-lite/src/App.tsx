@@ -15,6 +15,7 @@ import {
   User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import type { Variants } from 'framer-motion';
 
 // Views & Components
@@ -30,6 +31,7 @@ import StadiumSelector from './components/StadiumSelector';
 import { useRealtime } from './hooks/useRealtime';
 
 export default function App() {
+  const { t } = useTranslation();
   const [view, setView] = useState<'landing' | 'app'>('landing');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isEmergency, setIsEmergency] = useState(false);
@@ -57,11 +59,11 @@ export default function App() {
   }, []);
 
   const navItems = [
-    { id: 'dashboard', label: 'Overview', icon: <LayoutDashboard /> },
-    { id: 'analytics', label: 'Analytics', icon: <BarChart3 /> },
-    { id: 'ar', label: 'Venue Map', icon: <Navigation /> },
-    { id: 'queue', label: 'Queues', icon: <Coffee /> },
-    { id: 'rewards', label: 'Fan Rewards', icon: <Award /> },
+    { id: 'dashboard', label: t('nav.overview'), icon: <LayoutDashboard /> },
+    { id: 'analytics', label: t('nav.analytics'), icon: <BarChart3 /> },
+    { id: 'ar', label: t('nav.map'), icon: <Navigation /> },
+    { id: 'queue', label: t('nav.queues'), icon: <Coffee /> },
+    { id: 'rewards', label: t('nav.rewards') || 'Rewards', icon: <Award /> },
   ];
 
   const pageVariants: Variants = {
@@ -159,10 +161,10 @@ export default function App() {
           </div>
 
           <div className="hidden lg:flex flex-col items-center">
-            <h2 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full mb-1">Command Center</h2>
+            <h2 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full mb-1">{t('nav.command_center')}</h2>
             <div className="flex items-center gap-2">
               <span className={`px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-widest ${connected ? 'bg-stadium-success/10 text-stadium-success' : 'bg-stadium-emergency/10 text-stadium-emergency'}`}>
-                {isOffline ? 'Sync Offline' : connectionStatus}
+                {isOffline ? t('dashboard.offline') : (connected ? t('dashboard.connected') : t('dashboard.syncing'))}
               </span>
             </div>
           </div>
@@ -216,7 +218,7 @@ export default function App() {
                           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all"
                         >
                           <Settings size={16} />
-                          Settings
+                          {t('nav.settings')}
                         </button>
                         <div className="h-px bg-white/5 mx-2" />
                         <button
@@ -227,7 +229,7 @@ export default function App() {
                           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/10 transition-all text-left"
                         >
                           <LogOut size={16} />
-                          Log Out
+                          {t('settings.logout')}
                         </button>
                       </div>
                     </motion.div>

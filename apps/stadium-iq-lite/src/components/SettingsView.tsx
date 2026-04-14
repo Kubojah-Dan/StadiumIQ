@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { 
   Shield, 
   User as UserIcon, 
@@ -11,12 +12,14 @@ import {
   Database,
   ArrowRight,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  Globe
 } from 'lucide-react';
 
 type Tab = 'profile' | 'security' | 'alerts';
 
 export default function SettingsView({ userProfile, onUpdateProfile }: { userProfile: any, onUpdateProfile: any }) {
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [mfaEnabled, setMfaEnabled] = useState(false);
   const [isSettingUpMfa, setIsSettingUpMfa] = useState(false);
@@ -61,9 +64,9 @@ export default function SettingsView({ userProfile, onUpdateProfile }: { userPro
   };
 
   const sidebarItems = [
-    { id: 'profile', icon: <UserIcon />, label: 'Profile' },
-    { id: 'security', icon: <Shield />, label: 'Security & 2FA' },
-    { id: 'alerts', icon: <Bell />, label: 'Alert Preferences' },
+    { id: 'profile', icon: <UserIcon />, label: t('settings.profile') },
+    { id: 'security', icon: <Shield />, label: t('settings.security') },
+    { id: 'alerts', icon: <Bell />, label: t('settings.alerts') },
   ];
 
   return (
@@ -71,7 +74,7 @@ export default function SettingsView({ userProfile, onUpdateProfile }: { userPro
       <div className="mb-12">
         <h2 className="text-3xl font-black tracking-tighter uppercase font-display flex items-center gap-4">
           <SettingsIcon size={32} className="text-stadium-neon" />
-          Settings & Governance
+          {t('settings.governance')}
         </h2>
         <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-2 italic">Configuration Node • v2.1.4</p>
       </div>
@@ -132,7 +135,7 @@ export default function SettingsView({ userProfile, onUpdateProfile }: { userPro
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-10 border-t border-white/5">
                       <InputGroup 
-                        label="Full Name" 
+                        label={t('settings.profile')} 
                         value={userProfile.name} 
                         onChange={(val) => onUpdateProfile({ ...userProfile, name: val })} 
                       />
@@ -149,17 +152,31 @@ export default function SettingsView({ userProfile, onUpdateProfile }: { userPro
                       <InputGroup label="Deployment" value="Stadium Control Center" readonly />
                    </div>
 
-                   <div className="flex justify-end pt-10">
-                      <button 
-                        onClick={() => {
-                          showToast("Nexus Profile Synchronized");
-                          // Persist to local storage for realism
-                          localStorage.setItem('siq_profile', JSON.stringify(userProfile));
-                          localStorage.setItem('siq_credentials', JSON.stringify({ email, password }));
-                        }}
-                        className="px-10 py-4 bg-stadium-neon text-stadium-dark font-black rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:scale-105 transition-all text-xs uppercase tracking-widest"
-                      >Synchronize Profile</button>
-                   </div>
+                   <div className="flex justify-between items-center pt-10 border-t border-white/5">
+                        <div className="flex items-center gap-4">
+                          <Globe size={16} className="text-stadium-neon" />
+                          <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
+                            {['en', 'es', 'fr'].map((lng) => (
+                              <button
+                                key={lng}
+                                onClick={() => i18n.changeLanguage(lng)}
+                                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${i18n.language === lng ? 'bg-stadium-neon text-stadium-dark shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                              >
+                                {lng}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            showToast(t('settings.sync_profile'));
+                            // Persist to local storage for realism
+                            localStorage.setItem('siq_profile', JSON.stringify(userProfile));
+                            localStorage.setItem('siq_credentials', JSON.stringify({ email, password }));
+                          }}
+                          className="px-10 py-4 bg-stadium-neon text-stadium-dark font-black rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:scale-105 transition-all text-xs uppercase tracking-widest"
+                        >{t('settings.sync_profile')}</button>
+                    </div>
                 </div>
               )}
 
