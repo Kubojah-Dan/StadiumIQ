@@ -8,9 +8,9 @@ export function SustainabilityDashboard() {
   const { stadium } = useStadium();
   const { twinState } = useRealtime();
   
-  // Calculate live seed based on aggregate gate flow
-  const gates = Object.values(twinState.queues || {}).filter(q => q.category === 'food' || q.category === 'merch');
-  const totalWait = gates.reduce((acc, g) => acc + (g.wait_time || 0), 0);
+  // Calculate live seed based on aggregate grid flow
+  const foodStalls = Object.values(twinState.food || {});
+  const totalWait = foodStalls.reduce((acc, f: any) => acc + (f.wait_time || 0), 0);
   const liveSeed = totalWait / 10;
 
   const carbon = (12.4 + liveSeed * 0.5).toFixed(1);

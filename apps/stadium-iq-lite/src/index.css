@@ -64,7 +64,9 @@
     --safe-area-top: env(safe-area-inset-top, 0px);
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
     --header-height: 4rem;
-    --nav-height: 5rem;
+    --nav-height: 4.5rem;
+    --total-safe-t: calc(var(--header-height) + var(--safe-area-top));
+    --total-safe-b: calc(var(--nav-height) + var(--safe-area-bottom));
   }
 }
 
@@ -90,7 +92,11 @@
 }
 
 @utility safe-padding-b {
-  padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 1.5rem);
+  padding-bottom: calc(var(--total-safe-b) + 1.5rem);
+}
+
+@utility safe-padding-t {
+  padding-top: calc(var(--total-safe-t) + 1rem);
 }
 
 @utility tap-target {

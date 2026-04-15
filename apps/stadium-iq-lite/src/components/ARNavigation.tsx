@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ArrowLeft, 
   Battery, 
@@ -17,30 +17,47 @@ export default function ARNavigation() {
   const { stadium } = useStadium();
   const { alerts, twinState } = useRealtime();
   const [mapView, setMapView] = useState(false);
+  const [destination, setDestination] = useState<{ id: string, type: 'food' | 'toilet' | 'gate' | 'seat' }>({ id: 'Seat 237-A', type: 'seat' });
   const [eta, setEta] = useState(3);
   const [distance, setDistance] = useState(50);
   const [instruction, setInstruction] = useState('Proceed to North Concourse');
   const [voiceActive, setVoiceActive] = useState(false);
   const [isAccessible, setIsAccessible] = useState(false);
 
-  // Derived Congestion for the current path
+  // Mapped POIs from Stadium Context
+  const destinations = useMemo(() => [
+    ...(stadium.gateList || []).map(id => ({ id, type: 'gate' })),
+    ...(stadium.foodZones || []).map(id => ({ id, type: 'food' })),
+    ...(stadium.toiletNodes || []).map(id => ({ id, type: 'toilet' })),
+    { id: 'Seat 237-A', type: 'seat' }
+  ], [stadium]);
+
+  // Derived Congestion for the current path (simulating picking a zone based on destination)
   const pathDensity = useMemo(() => {
-    const zoneB = twinState.zones['Zone B']?.density || 0.2;
-    return zoneB;
-  }, [twinState.zones]);
+    const zones = Object.keys(twinState.zones || {});
+    if (zones.length === 0) return 0.2;
+    // Stable hash-based zone selection for simulation
+    const charCodeSum = destination.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const zoneId = zones[charCodeSum % zones.length];
+    return twinState.zones[zoneId]?.density || 0.3;
+  }, [twinState.zones, destination]);
 
   const pathColor = pathDensity > 0.8 ? '#ef4444' : pathDensity > 0.6 ? '#f97316' : '#06b6d4';
 
   useEffect(() => {
     if (alerts && alerts.length > 0) {
-      setInstruction(`Re-routing: ${alerts[0].message}`);
-      setEta(prev => Math.min(10, prev + 2));
-    } else if (pathDensity > 0.7) {
-      setInstruction('High Density Ahead: Slow Pace Advised');
+      setInstruction(`Rerouting: ${alerts[0].message}`);
+    } else if (pathDensity > 0.8) {
+      setInstruction('Congestion Ahead: Rerouting...');
     } else {
-      setInstruction(isAccessible ? 'Optimal Path: Elevator Access Ready' : 'Route Optimized: Proceed to Gate D');
+      setInstruction(`Navigate to ${destination.id}`);
     }
-  }, [alerts, pathDensity, isAccessible]);
+    
+    // Weighted ETA calculation
+    const baseTime = Math.ceil(distance / 15); // 15m per minute base
+    const congestionPenalty = pathDensity > 0.6 ? (pathDensity - 0.5) * 10 : 0;
+    setEta(Math.max(1, Math.ceil(baseTime + congestionPenalty)));
+  }, [alerts, pathDensity, isAccessible, destination, distance]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -83,6 +100,21 @@ export default function ARNavigation() {
             >
               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1200')] bg-cover bg-center brightness-[0.4] contrast-125 scale-105">
                 <div className="absolute inset-0 bg-gradient-to-t from-stadium-dark via-transparent to-stadium-dark/60"></div>
+              </div>
+
+              {/* Destination HUD Selection */}
+              <div className="absolute top-16 left-6 right-6 z-40 overflow-x-auto scrollbar-hide py-2 flex gap-2">
+                {destinations.slice(0, 6).map((dest) => (
+                  <button
+                    key={dest.id}
+                    onClick={() => { setDestination(dest as any); setDistance(Math.floor(20 + Math.random() * 200)); }}
+                    className={`px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${
+                      destination.id === dest.id ? 'bg-stadium-neon text-stadium-dark border-stadium-neon' : 'bg-stadium-dark/40 text-white/40 border-white/5'
+                    }`}
+                  >
+                    {dest.id}
+                  </button>
+                ))}
               </div>
 
               {/* Dynamic AR Path Overlay */}
@@ -177,7 +209,7 @@ export default function ARNavigation() {
         <div className="w-10 h-1.5 bg-white/10 rounded-full mx-auto mb-6 md:mb-10"></div>
         
         <div className="grid grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
-          <PanelMetric label="Target" value="237-A" />
+          <PanelMetric label="Target" value={destination.id.split(' ').pop() || '?'} />
           <PanelMetric label="ETA" value={`${eta}m`} highlight />
           <button 
             onClick={() => setIsAccessible(!isAccessible)}

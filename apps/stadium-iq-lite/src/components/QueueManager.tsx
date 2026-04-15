@@ -82,13 +82,13 @@ export default function QueueManager({ onNavigateToAR }: { onNavigateToAR: () =>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {queues.map((q: any) => (
               <QueueCard 
-                key={q.stall_id || q.id}
-                id={q.stall_id || q.id} 
-                name={q.stall_id || q.id} 
+                key={q.id}
+                id={q.id} 
+                name={q.id} 
                 wait={q.wait_time} 
                 level={q.wait_time < 10 ? "LOW" : q.wait_time < 25 ? "MED" : "HIGH"} 
                 distance={q.distance || 'Near Section 102'} 
-                recommended={recommended?.stall_id === q.stall_id}
+                recommended={recommended?.id === q.id}
               />
             ))}
           </div>
@@ -107,8 +107,12 @@ export default function QueueManager({ onNavigateToAR }: { onNavigateToAR: () =>
               <h3 className="text-lg md:text-xl font-bold text-white mb-2 leading-none uppercase tracking-tight">Active Rerouting Target</h3>
               <p className="text-[11px] md:text-sm text-slate-400 leading-relaxed max-w-xl">
                 Telemetry implies optimal flow at <span className="text-white font-bold">{activeCategory.toUpperCase()} Array</span>. 
-                We recommend heading to <span className="text-stadium-neon font-black">{recommended.id}</span>. 
-                Est. wait: <span className="text-stadium-success font-black">{recommended.wait_time} MINS</span>.
+                We recommend heading to <span className="text-stadium-neon font-black">{(recommended as any).id}</span>. 
+                {activeCategory === 'restroom' ? (
+                  <>Current occupancy: <span className="text-stadium-success font-black">{(recommended as any).occupancy}%</span></>
+                ) : (
+                  <>Est. wait: <span className="text-stadium-success font-black">{(recommended as any).wait_time} MINS</span></>
+                )}
               </p>
               <button 
                 onClick={onNavigateToAR}

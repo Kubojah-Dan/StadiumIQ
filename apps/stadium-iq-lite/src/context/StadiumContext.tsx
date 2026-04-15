@@ -64,6 +64,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     coordinates: { lat: 28.6379, lng: 77.243 },
     officialWebsite: "https://ddca.in",
     wikipediaSlug: "Arun_Jaitley_Stadium",
+    gateList: ["Gate 1", "Gate 3", "Gate 15"],
+    foodZones: ["Dilli Chat", "Stadium Grill"],
+    toiletNodes: ["T1 North", "T2 West"]
   },
   {
     id: "in-m-chinnaswamy",
@@ -74,6 +77,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     coordinates: { lat: 12.9788, lng: 77.5996 },
     officialWebsite: "https://ksca.cricket",
     wikipediaSlug: "M._Chinnaswamy_Stadium",
+    gateList: ["Cubbon Park Gate", "Queen's Road Gate"],
+    foodZones: ["Bisi Bele Bath Hub", "Stadium Snacks"],
+    toiletNodes: ["P1 Stand T", "P2 Stand T"]
   },
   {
     id: "in-chepauk",
@@ -84,6 +90,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     coordinates: { lat: 13.062, lng: 80.2796 },
     officialWebsite: "https://www.tnca.in",
     wikipediaSlug: "M._A._Chidambaram_Stadium",
+    gateList: ["Wallajah Road Gate", "Victoria Hostel Gate"],
+    foodZones: ["Marina Seafood", "Chennai Curries"],
+    toiletNodes: ["Level 1 East", "Level 1 West"]
   },
   {
     id: "in-hyderabad-uppal",
@@ -94,6 +103,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     coordinates: { lat: 17.4065, lng: 78.5506 },
     officialWebsite: "https://www.hycricket.org",
     wikipediaSlug: "Rajiv_Gandhi_International_Cricket_Stadium",
+    gateList: ["Gate 1 Main", "Gate 8 Players"],
+    foodZones: ["Hyderabadi Biryani", "Deccan Snacks"],
+    toiletNodes: ["North Stand T", "South Stand T"]
   },
   {
     id: "in-mca-pune",
@@ -104,6 +116,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     coordinates: { lat: 18.6745, lng: 73.706 },
     officialWebsite: "https://maharashtracricketassociation.com",
     wikipediaSlug: "Maharashtra_Cricket_Association_Stadium",
+    gateList: ["Gahunje Gate", "West Gate"],
+    foodZones: ["Puneri Misal", "Snack Center"],
+    toiletNodes: ["Section A T", "Section C T"]
   },
   {
     id: "in-pca-mohali",
@@ -114,6 +129,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     coordinates: { lat: 30.6901, lng: 76.7375 },
     officialWebsite: "https://www.punjabcricket.org",
     wikipediaSlug: "Punjab_Cricket_Association_Stadium",
+    gateList: ["Gate 1 North", "Gate 4 South"],
+    foodZones: ["Amritsari Kulcha", "Lassi Bar"],
+    toiletNodes: ["Level 0 T", "Level 1 T"]
   },
   {
     id: "in-sawai-mansingh",
@@ -124,6 +142,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     coordinates: { lat: 26.8941, lng: 75.8018 },
     officialWebsite: "https://www.rsca.in",
     wikipediaSlug: "Sawai_Mansingh_Stadium",
+    gateList: ["East Gate", "West Gate"],
+    foodZones: ["Jaipur Sweets", "Rajasthan Rasoi"],
+    toiletNodes: ["North End T", "South End T"]
   },
   {
     id: "in-ekana-lucknow",
@@ -133,6 +154,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 50000,
     coordinates: { lat: 26.8136, lng: 80.9398 },
     wikipediaSlug: "Ekana_Cricket_Stadium",
+    gateList: ["Gate 1 Outer", "Gate 3 Inner"],
+    foodZones: ["Lucknowi Kabab", "Awadhi Hub"],
+    toiletNodes: ["Floor 1 East", "Floor 1 West"]
   },
   {
     id: "in-hpca-dharamshala",
@@ -142,6 +166,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 23000,
     coordinates: { lat: 32.1278, lng: 76.3538 },
     wikipediaSlug: "Himachal_Pradesh_Cricket_Association_Stadium",
+    gateList: ["Lower Gate", "Upper Gate"],
+    foodZones: ["Mountain Snacks", "Tibetan Kitchen"],
+    toiletNodes: ["Stand A T", "Stand B T"]
   },
   {
     id: "in-vca-nagpur",
@@ -151,6 +178,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 45000,
     coordinates: { lat: 21.1492, lng: 79.0806 },
     wikipediaSlug: "Vidarbha_Cricket_Association_Stadium",
+    gateList: ["Jamtha Gate 1", "Jamtha Gate 2"],
+    foodZones: ["Nagpur Orange Bar", "Samosa Point"],
+    toiletNodes: ["Level 1 T", "Level 2 T"]
   },
   {
     id: "in-jsca-ranchi",
@@ -160,6 +190,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 50000,
     coordinates: { lat: 23.27, lng: 85.27 },
     wikipediaSlug: "JSCA_International_Stadium_Complex",
+    gateList: ["North Pavilion Gate", "South Pavilion Gate"],
+    foodZones: ["Jharkhandi Flavors", "Snack Shack"],
+    toiletNodes: ["West Block T", "East Block T"]
   },
   {
     id: "in-aca-vdca-vizag",
@@ -169,6 +202,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 25000,
     coordinates: { lat: 17.7981, lng: 83.3508 },
     wikipediaSlug: "Dr._Y._S._Rajasekhara_Reddy_ACA-VDCA_Cricket_Stadium",
+    gateList: ["Gate 1 Main", "Gate 2 Side"],
+    foodZones: ["Vizag Beach Snacks", "Andhra Spice"],
+    toiletNodes: ["North T", "South T"]
   },
   {
     id: "in-sca-rajkot",
@@ -178,6 +214,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 28000,
     coordinates: { lat: 22.36, lng: 70.71 },
     wikipediaSlug: "Saurashtra_Cricket_Association_Stadium",
+    gateList: ["Hirasar Gate", "Section 1 Gate"],
+    foodZones: ["Kathiyawadi Hub", "Gujarati Thali"],
+    toiletNodes: ["Tier 1 T", "Tier 2 T"]
   },
   {
     id: "in-holkar-indore",
@@ -187,6 +226,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 30000,
     coordinates: { lat: 22.7231, lng: 75.8767 },
     wikipediaSlug: "Holkar_Stadium",
+    gateList: ["Usha Raje Gate", "South Gate"],
+    foodZones: ["Indori Poha", "Sarafa Snacks"],
+    toiletNodes: ["Level 1 T", "Level 2 T"]
   },
   {
     id: "in-greenfield-tvm",
@@ -196,6 +238,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 50000,
     coordinates: { lat: 8.5671, lng: 76.8837 },
     wikipediaSlug: "Greenfield_International_Stadium",
+    gateList: ["Karyavattom Gate", "West Gate"],
+    foodZones: ["Kerala Seafood", "Coconut Hub"],
+    toiletNodes: ["Zone A T", "Zone B T"]
   },
   {
     id: "in-barsapara-guwahati",
@@ -205,6 +250,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 40000,
     coordinates: { lat: 26.1432, lng: 91.7364 },
     wikipediaSlug: "Barsapara_Stadium",
+    gateList: ["North Gate", "Sound Gate"],
+    foodZones: ["Assamese Tea", "Stadium Snacks"],
+    toiletNodes: ["Block A T", "Block C T"]
   },
   {
     id: "in-svns-raipur",
@@ -214,6 +262,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 65000,
     coordinates: { lat: 21.1925, lng: 81.7661 },
     wikipediaSlug: "Shaheed_Veer_Narayan_Singh_International_Cricket_Stadium",
+    gateList: ["Gate 1 Main", "Gate 10 Side"],
+    foodZones: ["Chhattisgarhi Tadka", "Snack Point"],
+    toiletNodes: ["Sector 1 T", "Sector 5 T"]
   },
   {
     id: "in-barabati-cuttack",
@@ -223,6 +274,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 45000,
     coordinates: { lat: 20.4811, lng: 85.8675 },
     wikipediaSlug: "Barabati_Stadium",
+    gateList: ["Gate 1 Main", "Gate 4 Players"],
+    foodZones: ["Odia Flavors", "Cuttack Curries"],
+    toiletNodes: ["North T", "South T"]
   },
   {
     id: "in-green-park-kanpur",
@@ -232,6 +286,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 32000,
     coordinates: { lat: 26.4841, lng: 80.3501 },
     wikipediaSlug: "Green_Park_Stadium",
+    gateList: ["Gate 1 East", "Gate 2 West"],
+    foodZones: ["Kanpur Chat", "UP Snacks"],
+    toiletNodes: ["Level 1 T", "Level 2 T"]
   },
   {
     id: "in-dy-patil-mumbai",
@@ -241,6 +298,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 55000,
     coordinates: { lat: 19.0436, lng: 73.0271 },
     wikipediaSlug: "DY_Patil_Stadium",
+    gateList: ["Gate 1 Outer", "Gate 5 Club"],
+    foodZones: ["Mumbai Street Food", "DY Grill"],
+    toiletNodes: ["East T", "West T"]
   },
   {
     id: "in-brabourne-mumbai",
@@ -250,6 +310,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     capacity: 20000,
     coordinates: { lat: 18.9322, lng: 72.8244 },
     wikipediaSlug: "Brabourne_Stadium",
+    gateList: ["CCI Gate", "North Gate"],
+    foodZones: ["CCI Bistro", "Mumbai Snacks"],
+    toiletNodes: ["Level 1 T", "Level 2 T"]
   },
 ];
 

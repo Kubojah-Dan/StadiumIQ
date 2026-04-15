@@ -16,6 +16,7 @@ import ARNavigation from './components/ARNavigation';
 import QueueManager from './components/QueueManager';
 import EmergencyPanel from './components/EmergencyPanel';
 import { FanRewards } from './components/SecondaryFeatures';
+import FanHome from './components/FanHome';
 import LandingPage from './components/LandingPage';
 import SettingsView from './components/SettingsView';
 import AnalyticsView from './components/AnalyticsView';
@@ -24,7 +25,7 @@ import { useRealtime } from './hooks/useRealtime';
 export default function App() {
   const { t } = useTranslation();
   const [view, setView] = useState<'landing' | 'app'>('landing');
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('home');
   const [isEmergency, setIsEmergency] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -54,6 +55,7 @@ export default function App() {
   const getPageTitle = () => {
     if (isEmergency) return 'EMERGENCY PROTOCOL';
     switch (activeTab) {
+      case 'home': return 'Home Hub';
       case 'dashboard': return t('nav.overview');
       case 'analytics': return t('nav.analytics');
       case 'ar': return t('nav.map');
@@ -82,6 +84,7 @@ export default function App() {
           <EmergencyPanel onClose={() => setIsEmergency(false)} />
         ) : (
           <>
+            {activeTab === 'home' && <FanHome onNavigate={setActiveTab} />}
             {activeTab === 'dashboard' && <Dashboard />}
             {activeTab === 'analytics' && <AnalyticsView />}
             {activeTab === 'ar' && <ARNavigation />}

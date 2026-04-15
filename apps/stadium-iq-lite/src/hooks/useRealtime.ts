@@ -132,38 +132,58 @@ export function useRealtime() {
           const next = { ...prev };
           
           // Evolve densities
-          Object.keys(next.zones).forEach(z => {
-            const noise = (Math.random() - 0.5) * 0.1;
+          Object.keys(next.zones || {}).forEach(z => {
+            const noise = (Math.random() - 0.5) * 0.15;
             next.zones[z].density = Math.max(0.1, Math.min(1, next.zones[z].density + noise));
             next.zones[z].alertLevel = next.zones[z].density > 0.85 ? 'Critical' : next.zones[z].density > 0.65 ? 'Warning' : 'Normal';
           });
 
           // Evolve Wait Times
-          Object.keys(next.food).forEach(f => {
-            next.food[f].wait_time = Math.max(2, Math.min(50, next.food[f].wait_time + (Math.random() > 0.5 ? 1 : -1)));
-            next.food[f].service_load = next.food[f].wait_time / 50;
+          Object.keys(next.food || {}).forEach(f => {
+            const change = Math.floor((Math.random() - 0.5) * 4);
+            next.food[f].wait_time = Math.max(2, Math.min(45, (next.food[f].wait_time || 10) + change));
+            next.food[f].service_load = next.food[f].wait_time / 45;
           });
 
           // Evolve Toilets
-          Object.keys(next.toilets).forEach(t => {
-            next.toilets[t].occupancy = Math.max(0, Math.min(100, next.toilets[t].occupancy + (Math.random() - 0.5) * 10));
-            next.toilets[t].status = next.toilets[t].occupancy > 90 ? 'busy' : 'open';
+          Object.keys(next.toilets || {}).forEach(t => {
+            const change = Math.floor((Math.random() - 0.5) * 10);
+            next.toilets[t].occupancy = Math.max(5, Math.min(100, (next.toilets[t].occupancy || 50) + change));
+            next.toilets[t].status = next.toilets[t].occupancy > 85 ? 'busy' : 'open';
           });
+
+          // Evolve Event (T20 match sim)
+          if (next.event) {
+             const [runs, wkts] = next.event.score.split(' / ').map(v => parseInt(v));
+             const [oversStr] = next.event.clock.split(' ');
+             let overs = parseFloat(oversStr);
+             
+             overs += 0.1;
+             if (overs % 1 >= 0.6) overs = Math.floor(overs) + 1;
+             
+             if (Math.random() > 0.7) {
+                const add = Math.floor(Math.random() * 7);
+                next.event.score = `${runs + add} / ${wkts + (Math.random() > 0.9 ? 1 : 0)}`;
+             }
+             next.event.clock = `${overs.toFixed(1)} overs`;
+          }
 
           return { ...next };
         });
 
         if (Math.random() > 0.85) {
+          const zoneLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+          const randomZone = `Zone ${zoneLetters[Math.floor(Math.random() * zoneLetters.length)]}`;
           const newAlert: RealtimeAlert = {
-            zone_id: `Zone ${['A','B','C','D'][Math.floor(Math.random()*4)]}`,
+            zone_id: randomZone,
             alert_level: 'Warning',
-            message: 'Localized density surge reported.',
-            surge_probability: 0.7,
-            estimated_surge_time: '2m'
+            message: `Localized density surge near ${randomZone}.`,
+            surge_probability: 0.75,
+            estimated_surge_time: '3m'
           };
           setAlerts(prev => [newAlert, ...prev].slice(0, MAX_ALERTS));
         }
-      }, 3000);
+      }, 4000);
 
       return () => clearInterval(updateInterval);
     };

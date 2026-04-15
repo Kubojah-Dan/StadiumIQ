@@ -56,7 +56,22 @@ export default function Dashboard() {
     [alerts]
   );
 
-  const eventStatus = twinState.event || { phase: 'Warming Up', score: '0/0', clock: '0.0' };
+  const occupancy = useMemo(() => {
+    const caps = stadium.capacity || 50000;
+    return Math.floor(avgDensity * caps);
+  }, [avgDensity, stadium.capacity]);
+
+  const gateStatus = useMemo(() => {
+    const gatesArr = Object.values(twinState.gates || {});
+    if (gatesArr.length === 0) return { label: 'OPEN', color: 'STABLE' };
+    const avgCongestion = gatesArr.reduce((acc, g) => acc + (g.congestion || 0), 0) / gatesArr.length;
+    return {
+      label: avgCongestion > 0.7 ? 'HEAVY' : avgCongestion > 0.4 ? 'MODERATE' : 'CLEAR',
+      color: avgCongestion > 0.7 ? 'HIGH' : avgCongestion > 0.4 ? 'STEADY' : 'OPT'
+    };
+  }, [twinState.gates]);
+
+  const eventStatus = twinState.event || { phase: 'LIVE', score: '0/0', clock: '0.0 overs' };
 
   // Three.js Scene Persistence Refs
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -307,8 +322,8 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 xs:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               <MetricCard label="Event Status" value={eventStatus.phase} trend={eventStatus.clock} />
               <MetricCard label="Live Score" value={eventStatus.score} trend="ACTIVE" />
-              <MetricCard label="Link Health" value={connected ? '100%' : 'OFFLINE'} trend={connected ? 'OPT' : 'ERR'} />
-              <MetricCard label="Global Density" value={`${(avgDensity * 100).toFixed(0)}%`} trend={avgDensity > 0.6 ? 'HIGH' : 'STABLE'} />
+              <MetricCard label="Occupancy" value={occupancy.toLocaleString()} trend={`${(avgDensity * 100).toFixed(0)}%`} />
+              <MetricCard label="Gate Flow" value={gateStatus.label} trend={gateStatus.color} />
           </div>
         </div>
 

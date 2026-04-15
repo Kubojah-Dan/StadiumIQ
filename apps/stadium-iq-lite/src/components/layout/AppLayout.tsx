@@ -4,6 +4,7 @@ import TopHeader from './TopHeader';
 import BottomNav from './BottomNav';
 import { 
   Activity, 
+  Home,
   LayoutDashboard, 
   BarChart3, 
   Navigation, 
@@ -54,10 +55,11 @@ export default function AppLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems: NavItem[] = [
-    { id: 'dashboard', label: 'Overview', icon: <LayoutDashboard /> },
-    { id: 'analytics', label: 'Analytics', icon: <BarChart3 /> },
-    { id: 'ar', label: 'Map', icon: <Navigation /> },
-    { id: 'queue', label: 'Queues', icon: <Coffee /> },
+    { id: 'home', label: 'Home', icon: <Home /> },
+    { id: 'ar', label: 'Tactical Map', icon: <Navigation /> },
+    { id: 'dashboard', label: 'Live Twin', icon: <LayoutDashboard /> },
+    { id: 'analytics', label: 'Intelligence', icon: <BarChart3 /> },
+    { id: 'queue', label: 'Facilities', icon: <Coffee /> },
     { id: 'rewards', label: 'Rewards', icon: <Award /> },
   ];
 
@@ -67,7 +69,7 @@ export default function AppLayout({
   };
 
   return (
-    <div className="min-h-screen bg-stadium-dark flex overflow-hidden selection:bg-stadium-neon selection:text-white font-sans">
+    <div className="min-h-[100dvh] h-[100dvh] bg-stadium-dark flex overflow-hidden selection:bg-stadium-neon selection:text-white font-sans">
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
@@ -213,7 +215,7 @@ export default function AppLayout({
       </motion.aside>
 
       {/* Main Layout Container */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
+      <div className="flex-1 flex flex-col h-[100dvh] overflow-hidden relative">
         <TopHeader 
           title={title}
           onMenuClick={() => setIsMobileMenuOpen(true)}
