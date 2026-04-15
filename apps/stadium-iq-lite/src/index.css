@@ -63,6 +63,8 @@
   :root {
     --safe-area-top: env(safe-area-inset-top, 0px);
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --header-height: 4rem;
+    --nav-height: 5rem;
   }
 }
 
@@ -70,11 +72,11 @@
   background-color: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
 @utility glass-card {
-  @apply glass rounded-2xl transition-all duration-300;
+  @apply glass rounded-3xl transition-all duration-300;
 }
 
 @utility glass-nav {
@@ -88,22 +90,37 @@
 }
 
 @utility safe-padding-b {
-  padding-bottom: calc(5rem + var(--safe-area-bottom));
+  padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 1.5rem);
 }
 
 @utility tap-target {
-  @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  @apply min-h-[48px] min-w-[48px] flex items-center justify-center cursor-pointer;
+}
+
+/* Fluid Typography */
+@layer utilities {
+  .text-fluid-h1 {
+    font-size: clamp(2rem, 8vw, 4.5rem);
+  }
+  .text-fluid-h2 {
+    font-size: clamp(1.5rem, 6vw, 2.5rem);
+  }
+}
+
+/* Fix overlapping content on mobile */
+@media (max-width: 768px) {
+  .glass-card {
+    @apply rounded-2xl;
+  }
 }
 
 /* Scrollbar Optimization for Native Feel */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;

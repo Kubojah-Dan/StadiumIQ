@@ -1,6 +1,9 @@
 export type DigitalTwinState = {
   zones: Record<string, ZoneState>;
-  queues: Record<string, QueueState>;
+  toilets: Record<string, ToiletState>;
+  food: Record<string, FoodStallState>;
+  gates: Record<string, GateState>;
+  event?: EventState;
 };
 
 export type ZoneState = {
@@ -10,17 +13,37 @@ export type ZoneState = {
   surge_prob?: number;
 };
 
-export type QueueState = {
+export type ToiletState = {
+  id: string;
+  status: 'open' | 'busy' | 'maintenance';
+  occupancy: number;
+  is_accessible: boolean;
+};
+
+export type FoodStallState = {
   id: string;
   wait_time: number;
-  category?: 'food' | 'restroom' | 'merch';
-  distance?: string;
-  occupancy?: number;
+  service_load: number;
+  status: 'active' | 'closed';
+};
+
+export type GateState = {
+  id: string;
+  congestion: number;
+  status: 'open' | 'restricted' | 'closed';
+};
+
+export type EventState = {
+  phase: string;
+  score: string;
+  clock: string;
 };
 
 export type RealtimeEvent = {
-  type: "twin:state_sync" | "crowd:update" | "surge:alert" | "queue:update";
-  data: unknown;
+  type: "twin:state_sync" | "crowd:update" | "surge:alert" | "queue:update" | "CROWD_UPDATE" | "TOILET_UPDATE" | "FOOD_UPDATE" | "GATE_UPDATE" | "EMERGENCY_ALERT" | "EVENT_UPDATE";
+  stadium_id?: string;
+  data?: any;
+  [key: string]: any;
 };
 
 export type RealtimeAlert = {

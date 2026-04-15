@@ -5,8 +5,13 @@ import type { DigitalTwinState, RealtimeAlert, RealtimeEvent } from '../types';
 const MAX_ALERTS = 60;
 
 export function useRealtime() {
-  const { stadiumId } = useStadium();
-  const [twinState, setTwinState] = useState<DigitalTwinState>({ zones: {}, queues: {} });
+  const { stadiumId, stadium } = useStadium();
+  const [twinState, setTwinState] = useState<DigitalTwinState>({ 
+    zones: {}, 
+    toilets: {}, 
+    food: {}, 
+    gates: {} 
+  });
   const [alerts, setAlerts] = useState<RealtimeAlert[]>([]);
   const [connected, setConnected] = useState(false);
   const [isSimulator, setIsSimulator] = useState(false);
@@ -23,7 +28,6 @@ export function useRealtime() {
     const connect = async () => {
       if (cancelled) return;
       
-      // Reset state for new stadium
       setConnected(false);
       setIsSimulator(false);
       setConnectionStatus("Discovering Gateway...");
@@ -42,44 +46,42 @@ export function useRealtime() {
         }
 
         if (wsUrl) {
-          setConnectionStatus(`Connecting to ${wsUrl.includes(':8001') ? 'Local Hub (8001)...' : 'Cloud Node...'}`);
+          setConnectionStatus(`Connecting...`);
           const ws = new WebSocket(wsUrl);
           wsRef.current = ws;
 
           ws.onopen = () => {
             setConnected(true);
-            setConnectionStatus("Operational: Real-time Link Active");
+            setConnectionStatus("Live Link Active");
             statusRef.current.connected = true;
             attempt = 0;
-            console.log(`Connected to Realtime: ${stadiumId}`);
           };
 
           ws.onmessage = (event) => {
             try {
               const payload = JSON.parse(event.data) as RealtimeEvent;
+              if (payload.stadium_id && payload.stadium_id !== stadiumId) return;
               handleRealtimeEvent(payload, setTwinState, setAlerts);
-            } catch (e) { /* ignore parse err */ }
+            } catch (e) { /* ignore */ }
           };
 
           ws.onclose = () => {
             if (cancelled) return;
             setConnected(false);
-            setConnectionStatus("Link Closed. Retrying...");
+            setConnectionStatus("Retrying...");
             statusRef.current.connected = false;
             attempt++;
             const delay = Math.min(10000, 1000 * Math.pow(1.5, attempt));
             reconnectRef.current = window.setTimeout(connect, delay);
           };
 
-          // Fallback to simulator if no connection after 3 seconds
           window.setTimeout(() => {
             if (!statusRef.current.connected && !cancelled && ws.readyState !== WebSocket.OPEN) {
-              console.warn("WebSocket timeout, starting simulator");
-              startSimulator("Gateway Unreachable (Port 8001)");
+              startSimulator("Port 8001 Timeout");
             }
           }, 3000);
         } else {
-          startSimulator("No Hub Configured");
+          startSimulator("No Hub Config");
         }
       } catch (e) {
         startSimulator("Connection Error");
@@ -91,71 +93,77 @@ export function useRealtime() {
       
       setIsSimulator(true);
       setConnected(true);
-      setConnectionStatus(`Simulator Active: ${reason}`);
+      setConnectionStatus(`Simulator: ${reason}`);
       statusRef.current.isSimulator = true;
       statusRef.current.connected = true;
       
-      // Initial Sync
+      // Seed initial state based on stadium metadata
       const initialZones: Record<string, any> = {};
-      ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'].forEach(letter => {
+      ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].forEach(letter => {
         const id = `Zone ${letter}`;
-        const density = 0.2 + (Math.random() * 0.6);
-        initialZones[id] = { 
-          id, 
-          density, 
-          alertLevel: density > 0.8 ? 'Critical' : density > 0.6 ? 'Warning' : 'Normal',
-          surge_prob: density > 0.6 ? (density - 0.5) * 2 : 0
-        };
+        initialZones[id] = { id, density: 0.2 + Math.random() * 0.4, alertLevel: 'Normal' };
+      });
+
+      const initialToilets: Record<string, any> = {};
+      (stadium.toiletNodes || ["T1", "T2"]).forEach(id => {
+        initialToilets[id] = { id, status: 'open', occupancy: 20 + Math.random() * 30, is_accessible: true };
+      });
+
+      const initialFood: Record<string, any> = {};
+      (stadium.foodZones || ["Snack Bar"]).forEach(id => {
+        initialFood[id] = { id, wait_time: 5 + Math.floor(Math.random() * 10), service_load: 0.3, status: 'active' };
+      });
+
+      const initialGates: Record<string, any> = {};
+      (stadium.gateList || ["Main Gate"]).forEach(id => {
+        initialGates[id] = { id, congestion: 0.1, status: 'open' };
       });
 
       setTwinState({
         zones: initialZones,
-        queues: {
-          'Alpha Grill': { id: 'Alpha Grill', wait_time: 4, category: 'food', distance: '120m' },
-          'Stadium Snacks': { id: 'Stadium Snacks', wait_time: 14, category: 'food', distance: '180m' },
-          'Boutique Merch': { id: 'Boutique Merch', wait_time: 2, category: 'merch', distance: '45m' },
-          'Team Store': { id: 'Team Store', wait_time: 18, category: 'merch', distance: '210m' },
-          'North Restrooms': { id: 'North Restrooms', wait_time: 1, category: 'restroom', occupancy: 15 },
-          'East Restrooms': { id: 'East Restrooms', wait_time: 8, category: 'restroom', occupancy: 85 },
-        }
+        toilets: initialToilets,
+        food: initialFood,
+        gates: initialGates,
+        event: { phase: 'LIVE', score: '124/2', clock: '15.4 overs' }
       });
 
       const updateInterval = window.setInterval(() => {
         setTwinState(prev => {
-          const nextZones = { ...prev.zones };
-          Object.keys(nextZones).forEach(z => {
-            const noise = (Math.random() - 0.5) * 0.15;
-            nextZones[z].density = Math.max(0.1, Math.min(1, nextZones[z].density + noise));
-            nextZones[z].alertLevel = nextZones[z].density > 0.85 ? 'Critical' : nextZones[z].density > 0.65 ? 'Warning' : 'Normal';
+          const next = { ...prev };
+          
+          // Evolve densities
+          Object.keys(next.zones).forEach(z => {
+            const noise = (Math.random() - 0.5) * 0.1;
+            next.zones[z].density = Math.max(0.1, Math.min(1, next.zones[z].density + noise));
+            next.zones[z].alertLevel = next.zones[z].density > 0.85 ? 'Critical' : next.zones[z].density > 0.65 ? 'Warning' : 'Normal';
           });
 
-          const nextQueues = { ...prev.queues };
-          Object.keys(nextQueues).forEach(q => {
-             const change = Math.floor((Math.random() - 0.5) * 4);
-             if (nextQueues[q].category === 'restroom') {
-                nextQueues[q].occupancy = Math.max(5, Math.min(100, (nextQueues[q].occupancy || 50) + change * 5));
-             } else {
-                nextQueues[q].wait_time = Math.max(1, Math.min(45, (nextQueues[q].wait_time || 10) + change));
-             }
+          // Evolve Wait Times
+          Object.keys(next.food).forEach(f => {
+            next.food[f].wait_time = Math.max(2, Math.min(50, next.food[f].wait_time + (Math.random() > 0.5 ? 1 : -1)));
+            next.food[f].service_load = next.food[f].wait_time / 50;
           });
 
-          return { ...prev, zones: nextZones, queues: nextQueues };
+          // Evolve Toilets
+          Object.keys(next.toilets).forEach(t => {
+            next.toilets[t].occupancy = Math.max(0, Math.min(100, next.toilets[t].occupancy + (Math.random() - 0.5) * 10));
+            next.toilets[t].status = next.toilets[t].occupancy > 90 ? 'busy' : 'open';
+          });
+
+          return { ...next };
         });
 
-        // Periodic synthetic alerts
-        if (Math.random() > 0.7) {
-           const zoneLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
-           const randomZone = `Zone ${zoneLetters[Math.floor(Math.random() * zoneLetters.length)]}`;
-           const newAlert: RealtimeAlert = {
-              zone_id: randomZone,
-              alert_level: Math.random() > 0.5 ? 'Warning' : 'Critical',
-              message: `High density detected near ${randomZone}. Flow optimization required.`,
-              surge_probability: 0.7 + Math.random() * 0.2,
-              estimated_surge_time: '5m'
-           };
-           setAlerts(prev => [newAlert, ...prev].slice(0, MAX_ALERTS));
+        if (Math.random() > 0.85) {
+          const newAlert: RealtimeAlert = {
+            zone_id: `Zone ${['A','B','C','D'][Math.floor(Math.random()*4)]}`,
+            alert_level: 'Warning',
+            message: 'Localized density surge reported.',
+            surge_probability: 0.7,
+            estimated_surge_time: '2m'
+          };
+          setAlerts(prev => [newAlert, ...prev].slice(0, MAX_ALERTS));
         }
-      }, 5000);
+      }, 3000);
 
       return () => clearInterval(updateInterval);
     };
@@ -173,10 +181,48 @@ export function useRealtime() {
 }
 
 function handleRealtimeEvent(payload: RealtimeEvent, setTwinState: any, setAlerts: any) {
-  // Logic same as official dashboard (simplified for lite if needed)
   if (payload.type === 'twin:state_sync') {
     setTwinState(payload.data);
-  } else if (payload.type === 'surge:alert') {
-    setAlerts((prev: any) => [payload.data, ...prev].slice(0, MAX_ALERTS));
+  } else if (payload.type === 'surge:alert' || payload.type === 'EMERGENCY_ALERT') {
+    const alertData = payload.data || payload;
+    setAlerts((prev: any) => [{
+      zone_id: alertData.zone_id || alertData.scope,
+      alert_level: alertData.alert_level || alertData.severity,
+      message: alertData.message,
+      surge_probability: alertData.surge_probability || 0.9,
+      estimated_surge_time: alertData.estimated_surge_time || 'Now'
+    }, ...prev].slice(0, MAX_ALERTS));
+  } else if (payload.type === 'CROWD_UPDATE') {
+    setTwinState((prev: DigitalTwinState) => ({
+      ...prev,
+      zones: {
+        ...prev.zones,
+        [payload.zone_id]: { 
+          id: payload.zone_id, 
+          density: payload.calculated_density,
+          alertLevel: payload.calculated_density > 0.8 ? 'Critical' : payload.calculated_density > 0.6 ? 'Warning' : 'Normal'
+        }
+      }
+    }));
+  } else if (payload.type === 'TOILET_UPDATE') {
+    setTwinState((prev: DigitalTwinState) => ({
+      ...prev,
+      toilets: { ...prev.toilets, [payload.toilet_id]: payload }
+    }));
+  } else if (payload.type === 'FOOD_UPDATE') {
+    setTwinState((prev: DigitalTwinState) => ({
+      ...prev,
+      food: { ...prev.food, [payload.stall_id]: payload }
+    }));
+  } else if (payload.type === 'GATE_UPDATE') {
+    setTwinState((prev: DigitalTwinState) => ({
+      ...prev,
+      gates: { ...prev.gates, [payload.gate_id]: payload }
+    }));
+  } else if (payload.type === 'EVENT_UPDATE') {
+    setTwinState((prev: DigitalTwinState) => ({
+      ...prev,
+      event: payload
+    }));
   }
 }

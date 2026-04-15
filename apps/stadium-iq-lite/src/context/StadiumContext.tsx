@@ -10,6 +10,9 @@ export type Stadium = {
   officialWebsite?: string;
   wikipediaSlug?: string;
   notes?: string;
+  gateList?: string[];
+  foodZones?: string[];
+  toiletNodes?: string[];
 };
 
 export const STADIUMS_INDIA: Stadium[] = [
@@ -22,6 +25,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     coordinates: { lat: 23.0917, lng: 72.5979 },
     officialWebsite: "https://www.gujaratcricketassociation.com",
     wikipediaSlug: "Narendra_Modi_Stadium",
+    gateList: ["North A", "South B", "East C", "West D"],
+    foodZones: ["Alpha Grill", "Stadium Snacks", "Chai Hub", "Curry Corner"],
+    toiletNodes: ["North T1", "South T2", "East T3", "West T4"]
   },
   {
     id: "in-eden-gardens",
@@ -32,6 +38,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     coordinates: { lat: 22.5646, lng: 88.3433 },
     officialWebsite: "https://www.cricketassociationofbengal.com",
     wikipediaSlug: "Eden_Gardens",
+    gateList: ["Gate 1", "Gate 5", "Club Entrance"],
+    foodZones: ["Mishti Hub", "Kolkata Rolls", "Stadium Snacks"],
+    toiletNodes: ["Level 1 East", "Level 2 West"]
   },
   {
     id: "in-wankhede",
@@ -42,6 +51,9 @@ export const STADIUMS_INDIA: Stadium[] = [
     coordinates: { lat: 18.9389, lng: 72.8258 },
     officialWebsite: "https://www.mumbaicricket.com",
     wikipediaSlug: "Wankhede_Stadium",
+    gateList: ["Marine Drive Gate", "Vinoo Mankad Gate"],
+    foodZones: ["Vada Pav Express", "Mumbai Masala"],
+    toiletNodes: ["North Stand T1", "Grandstand T2"]
   },
   {
     id: "in-arun-jaitley",

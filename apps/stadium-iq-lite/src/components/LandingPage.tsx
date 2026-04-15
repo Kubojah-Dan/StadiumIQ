@@ -226,7 +226,7 @@ function LoginModal({ onLogin, onClose }: { onLogin: () => void, onClose: () => 
     >
       <motion.div 
         initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }}
-        className="max-w-md w-full glass-card p-8 md:p-10 relative overflow-hidden border-stadium-neon/30 shadow-2xl"
+        className="max-w-md w-full glass-card p-6 xs:p-5 md:p-10 relative overflow-hidden border-stadium-neon/30 shadow-2xl"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-stadium-neon/10 blur-[100px] -mr-32 -mt-32" />
         <button onClick={onClose} className="absolute top-6 right-6 text-slate-500 hover:text-white transition-all tap-target">
@@ -237,8 +237,8 @@ function LoginModal({ onLogin, onClose }: { onLogin: () => void, onClose: () => 
           <div className="w-14 h-14 md:w-16 md:h-16 bg-stadium-neon/10 rounded-2xl flex items-center justify-center text-stadium-neon mb-8 mx-auto border border-stadium-neon/20 shadow-xl shadow-cyan-500/10">
             <KeyRound size={32} />
           </div>
-          <h2 className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-display mb-2">Ops Portal</h2>
-          <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-10">Credentials Authorization Required</p>
+          <h2 className="text-xl md:text-3xl font-black tracking-tighter uppercase font-display mb-2">Ops Portal</h2>
+          <p className="text-slate-500 text-[8px] md:text-[10px] font-bold uppercase tracking-widest mb-6 md:mb-10">Credentials Authorization Required</p>
 
           <form className="space-y-5 md:space-y-6 text-left" onSubmit={handleLogin}>
             <div className="space-y-1.5 md:space-y-2">
@@ -294,7 +294,7 @@ function RegistrationModal({ onClose }: { onClose: () => void }) {
     >
       <motion.div 
         initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
-        className="max-w-lg w-full glass-card p-8 md:p-10 relative overflow-hidden border-stadium-neon/20 shadow-2xl"
+        className="max-w-lg w-full glass-card p-6 xs:p-5 md:p-10 relative overflow-hidden border-stadium-neon/20 shadow-2xl"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-stadium-neon/10 blur-[100px] -mr-32 -mt-32" />
         <button onClick={onClose} className="absolute top-6 right-6 text-slate-500 hover:text-white transition-all tap-target">

@@ -56,6 +56,8 @@ export default function Dashboard() {
     [alerts]
   );
 
+  const eventStatus = twinState.event || { phase: 'Warming Up', score: '0/0', clock: '0.0' };
+
   // Three.js Scene Persistence Refs
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -134,6 +136,7 @@ export default function Dashboard() {
     stadiumGroup.add(pitch);
 
     const zoneLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
+    // Zone Meshes
     zoneLetters.forEach((letter, i) => {
       const id = `Zone ${letter}`;
       const angle = (i / zoneLetters.length) * Math.PI * 2;
@@ -148,14 +151,40 @@ export default function Dashboard() {
         emissiveIntensity: 0.6 
       });
       const mesh = new THREE.Mesh(zoneGeo, zoneMat);
-      
       mesh.position.set(Math.cos(angle) * radius, 1.5, Math.sin(angle) * radius);
       mesh.lookAt(0, 1.5, 0);
-      
       stadiumGroup.add(mesh);
       zoneMeshes[id] = mesh;
     });
     zoneMeshesRef.current = zoneMeshes;
+
+    // Toilet Markers
+    const toiletMeshes: Record<string, THREE.Mesh> = {};
+    (stadium.toiletNodes || []).forEach((id, i) => {
+      const angle = (i / (stadium.toiletNodes?.length || 1)) * Math.PI * 2 + 0.5;
+      const radius = 32;
+      const geo = new THREE.SphereGeometry(1, 16, 16);
+      const mat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x10b981, emissiveIntensity: 1 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(Math.cos(angle) * radius, 1, Math.sin(angle) * radius);
+      stadiumGroup.add(mesh);
+      toiletMeshes[id] = mesh;
+    });
+    (window as any).toiletMeshes = toiletMeshes;
+
+    // Food Markers
+    const foodMeshes: Record<string, THREE.Mesh> = {};
+    (stadium.foodZones || []).forEach((id, i) => {
+      const angle = (i / (stadium.foodZones?.length || 1)) * Math.PI * 2 - 0.5;
+      const radius = 32;
+      const geo = new THREE.OctahedronGeometry(1.2, 0);
+      const mat = new THREE.MeshStandardMaterial({ color: 0xf97316, emissive: 0xf97316, emissiveIntensity: 1 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(Math.cos(angle) * radius, 1.2, Math.sin(angle) * radius);
+      stadiumGroup.add(mesh);
+      foodMeshes[id] = mesh;
+    });
+    (window as any).foodMeshes = foodMeshes;
 
     scene.add(stadiumGroup);
     scene.add(new THREE.AmbientLight(0xffffff, 0.5));
@@ -276,10 +305,10 @@ export default function Dashboard() {
 
           {/* Quick Metrics Grid */}
           <div className="grid grid-cols-2 xs:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              <MetricCard label="Global Density" value={`${(avgDensity * 100).toFixed(0)}%`} trend={avgDensity > 0.6 ? 'HIGH' : 'STABLE'} />
-              <MetricCard label="Live Alerts" value={activeAlerts.toString()} trend="ACTIVE" />
+              <MetricCard label="Event Status" value={eventStatus.phase} trend={eventStatus.clock} />
+              <MetricCard label="Live Score" value={eventStatus.score} trend="ACTIVE" />
               <MetricCard label="Link Health" value={connected ? '100%' : 'OFFLINE'} trend={connected ? 'OPT' : 'ERR'} />
-              <MetricCard label="Est. Triage" value="3m" trend="FAST" />
+              <MetricCard label="Global Density" value={`${(avgDensity * 100).toFixed(0)}%`} trend={avgDensity > 0.6 ? 'HIGH' : 'STABLE'} />
           </div>
         </div>
 

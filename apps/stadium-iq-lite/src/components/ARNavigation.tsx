@@ -15,20 +15,32 @@ import { useRealtime } from '../hooks/useRealtime';
 
 export default function ARNavigation() {
   const { stadium } = useStadium();
-  const { alerts } = useRealtime();
+  const { alerts, twinState } = useRealtime();
   const [mapView, setMapView] = useState(false);
   const [eta, setEta] = useState(3);
   const [distance, setDistance] = useState(50);
   const [instruction, setInstruction] = useState('Proceed to North Concourse');
   const [voiceActive, setVoiceActive] = useState(false);
+  const [isAccessible, setIsAccessible] = useState(false);
+
+  // Derived Congestion for the current path
+  const pathDensity = useMemo(() => {
+    const zoneB = twinState.zones['Zone B']?.density || 0.2;
+    return zoneB;
+  }, [twinState.zones]);
+
+  const pathColor = pathDensity > 0.8 ? '#ef4444' : pathDensity > 0.6 ? '#f97316' : '#06b6d4';
 
   useEffect(() => {
     if (alerts && alerts.length > 0) {
-      setInstruction(`Caution: ${alerts[0].message}`);
+      setInstruction(`Re-routing: ${alerts[0].message}`);
+      setEta(prev => Math.min(10, prev + 2));
+    } else if (pathDensity > 0.7) {
+      setInstruction('High Density Ahead: Slow Pace Advised');
     } else {
-      setInstruction('Route Optimized: Proceed to Gate D');
+      setInstruction(isAccessible ? 'Optimal Path: Elevator Access Ready' : 'Route Optimized: Proceed to Gate D');
     }
-  }, [alerts]);
+  }, [alerts, pathDensity, isAccessible]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -41,7 +53,7 @@ export default function ARNavigation() {
   const toggleVoice = () => {
     setVoiceActive(!voiceActive);
     if (!voiceActive) {
-      const msg = new SpeechSynthesisUtterance(`${instruction}. ${distance} meters to your target at ${stadium.name}.`);
+      const msg = new SpeechSynthesisUtterance(`${instruction}. ${distance} meters remaining.`);
       window.speechSynthesis.speak(msg);
     }
   };
@@ -78,7 +90,7 @@ export default function ARNavigation() {
                 <motion.path
                   d="M 200 600 L 200 450 L 320 350 L 320 150"
                   fill="none"
-                  stroke="#06b6d4"
+                  stroke={pathColor}
                   strokeWidth="6"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -89,7 +101,7 @@ export default function ARNavigation() {
                 />
                 <motion.circle
                   cx="320" cy="150" r="6"
-                  fill="#06b6d4"
+                  fill={pathColor}
                   animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0.2, 0.8] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                   className="drop-shadow-[0_0_10px_rgba(6,182,212,1)]"
@@ -167,7 +179,15 @@ export default function ARNavigation() {
         <div className="grid grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
           <PanelMetric label="Target" value="237-A" />
           <PanelMetric label="ETA" value={`${eta}m`} highlight />
-          <PanelMetric label="Link" value="GATE 4" />
+          <button 
+            onClick={() => setIsAccessible(!isAccessible)}
+            className={`flex flex-col items-center gap-1.5 text-center transition-all ${isAccessible ? 'text-stadium-neon' : 'text-slate-500'}`}
+          >
+            <p className="text-[8px] md:text-[10px] uppercase font-bold tracking-widest leading-none">Access</p>
+            <p className={`text-xs md:text-base font-black tracking-tight ${isAccessible ? 'text-stadium-neon' : 'text-white'}`}>
+              {isAccessible ? 'ENABLED' : 'OFF'}
+            </p>
+          </button>
         </div>
 
         {/* Bottom Actions */}

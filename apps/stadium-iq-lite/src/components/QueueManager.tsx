@@ -17,10 +17,16 @@ export default function QueueManager({ onNavigateToAR }: { onNavigateToAR: () =>
   const [activeCategory, setActiveCategory] = useState('food');
   const { twinState } = useRealtime();
 
-  const queues = Object.values(twinState.queues || {}).filter(q => q.category === activeCategory);
+  const getFilteredData = () => {
+    if (activeCategory === 'food') return Object.values(twinState.food || {});
+    if (activeCategory === 'restroom') return Object.values(twinState.toilets || {});
+    return [];
+  };
+
+  const queues = getFilteredData();
   
-  // Find a recommended one (shortest wait)
-  const recommended = [...queues].sort((a, b) => {
+  // Find a recommended one (shortest wait or lowest occupancy)
+  const recommended = [...queues].sort((a: any, b: any) => {
      if (activeCategory === 'restroom') return (a.occupancy || 0) - (b.occupancy || 0);
      return (a.wait_time || 0) - (b.wait_time || 0);
   })[0];
@@ -74,15 +80,15 @@ export default function QueueManager({ onNavigateToAR }: { onNavigateToAR: () =>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {queues.map((q) => (
+            {queues.map((q: any) => (
               <QueueCard 
-                key={q.id}
-                id={q.id} 
-                name={q.id} 
+                key={q.stall_id || q.id}
+                id={q.stall_id || q.id} 
+                name={q.stall_id || q.id} 
                 wait={q.wait_time} 
-                level={q.wait_time < 5 ? "LOW" : q.wait_time < 15 ? "MED" : "HIGH"} 
-                distance={q.distance || '100m'} 
-                recommended={recommended?.id === q.id}
+                level={q.wait_time < 10 ? "LOW" : q.wait_time < 25 ? "MED" : "HIGH"} 
+                distance={q.distance || 'Near Section 102'} 
+                recommended={recommended?.stall_id === q.stall_id}
               />
             ))}
           </div>
