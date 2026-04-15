@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CloudRain, 
   Sun, 
@@ -9,26 +9,44 @@ import {
   Ticket, 
   Calendar,
   Clock,
-  ArrowRight
+  ArrowRight,
+  X,
+  QrCode
 } from 'lucide-react';
 import { useStadium } from '../context/StadiumContext';
 
 export default function FanHome({ onNavigate }: { onNavigate: (tab: string) => void }) {
   const { stadium } = useStadium();
-  const [countdown, setCountdown] = useState({ h: 2, m: 14, s: 45 });
-  const [weather] = useState({ temp: 28, condition: 'Clear', humidity: 45 });
+  const [showPass, setShowPass] = useState(false);
+  const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
+  
+  // Target match date: April 17, 2026
+  const targetDate = useMemo(() => new Date('2026-04-17T19:30:00+05:30'), []);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev.s > 0) return { ...prev, s: prev.s - 1 };
-        if (prev.m > 0) return { ...prev, m: prev.m - 1, s: 59 };
-        if (prev.h > 0) return { h: prev.h - 1, m: 59, s: 59 };
-        return prev;
-      });
-    }, 1000);
+    const updateCountdown = () => {
+      const now = new Date();
+      const diff = targetDate.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        setCountdown({ d: 0, h: 0, m: 0, s: 0 });
+        return;
+      }
+
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diff / (1000 * 60)) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+
+      setCountdown({ d, h, m, s });
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [targetDate]);
+
+  const [weather] = useState({ temp: 28, condition: 'Clear', humidity: 45 });
 
   return (
     <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700 font-sans">
@@ -37,7 +55,8 @@ export default function FanHome({ onNavigate }: { onNavigate: (tab: string) => v
         <div className="absolute top-0 right-0 w-80 h-80 bg-stadium-neon/10 blur-[120px] -mr-40 -mt-40" />
         <div className="relative z-10">
           <p className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-stadium-neon mb-4">Match Day Countdown</p>
-          <h2 className="text-4xl md:text-7xl font-black text-white tracking-tighter mb-8 leading-none">
+          <h2 className="text-4xl md:text-7xl font-black text-white tracking-tighter mb-8 leading-none tabular-nums">
+            {countdown.d > 0 && <span>{String(countdown.d).padStart(2, '0')}<span className="text-white/20">:</span></span>}
             {String(countdown.h).padStart(2, '0')}<span className="text-white/20">:</span>
             {String(countdown.m).padStart(2, '0')}<span className="text-white/20">:</span>
             {String(countdown.s).padStart(2, '0')}
@@ -49,7 +68,7 @@ export default function FanHome({ onNavigate }: { onNavigate: (tab: string) => v
               </div>
               <div>
                 <p className="text-[8px] text-slate-500 uppercase font-black tracking-widest leading-none">Date</p>
-                <p className="text-xs md:text-sm font-bold text-white mt-1">OCT 24, 2026</p>
+                <p className="text-xs md:text-sm font-bold text-white mt-1">APR 17, 2026</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -121,19 +140,78 @@ export default function FanHome({ onNavigate }: { onNavigate: (tab: string) => v
          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
             <div className="flex items-center gap-6">
                <div className="w-16 h-16 md:w-20 md:h-20 bg-stadium-neon rounded-2xl md:rounded-3xl flex items-center justify-center text-stadium-dark shadow-xl shadow-cyan-500/20 group-hover:scale-105 transition-transform shrink-0">
-                  <Ticket className="size-8 md:size-10" />
+                  <Ticket className="w-8 h-8 md:w-10 md:h-10" />
                </div>
                <div className="text-center sm:text-left">
                   <h3 className="text-xl md:text-2xl font-black text-white tracking-tighter uppercase mb-1">Elite VIP Access</h3>
                   <p className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-widest">Member ID: IQ-77243-DELTA</p>
                </div>
             </div>
-            <button className="px-8 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-stadium-neon hover:text-stadium-dark transition-all flex items-center gap-2 shadow-lg">
+            <button 
+              onClick={() => setShowPass(true)}
+              className="px-8 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-stadium-neon hover:text-stadium-dark transition-all flex items-center gap-2 shadow-lg"
+            >
                View Pass
                <ArrowRight size={14} />
             </button>
          </div>
       </section>
+
+      {/* VIP PASS MODAL */}
+      <AnimatePresence>
+        {showPass && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stadium-dark/95 backdrop-blur-md"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="relative w-full max-w-sm glass-card p-8 border-stadium-neon/30 overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-40 h-40 bg-stadium-neon/10 blur-[80px] -mr-20 -mt-20" />
+              
+              <button 
+                onClick={() => setShowPass(false)}
+                className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+              >
+                <X size={24} />
+              </button>
+
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-stadium-neon rounded-2xl flex items-center justify-center text-stadium-dark mb-6">
+                  <Ticket size={32} />
+                </div>
+                <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Elite VIP Pass</h3>
+                <p className="text-[10px] font-bold text-stadium-neon uppercase tracking-[0.2em] mb-8">Digital Membership</p>
+
+                <div className="w-full bg-white p-6 rounded-3xl mb-8 flex flex-col items-center gap-4">
+                  <QrCode size={180} className="text-stadium-dark" />
+                  <p className="text-xs font-black text-stadium-dark opacity-50 tracking-widest">SCAN AT GATE 1A</p>
+                </div>
+
+                <div className="w-full space-y-4 text-left">
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Member</span>
+                    <span className="text-[10px] font-bold text-white uppercase tracking-widest">IQ-77243-DELTA</span>
+                  </div>
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Venue</span>
+                    <span className="text-[10px] font-bold text-white uppercase tracking-widest">{stadium?.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Tier</span>
+                    <span className="text-[10px] font-bold text-stadium-neon uppercase tracking-widest">VIP GOLD</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -152,3 +230,4 @@ function ActionCard({ icon, title, desc, onClick, color }: { icon: any, title: s
     </button>
   );
 }
+
