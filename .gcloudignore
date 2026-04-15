@@ -1,8 +1,0 @@
-node_modules/
-.venv/
-.git/
-.turbo/
-dist/
-build/
-*.log
-.env

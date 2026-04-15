@@ -1,6 +1,0 @@
-{
-  "name": "@stadiumiq/utils",
-  "version": "0.1.0",
-  "private": true,
-  "main": "./index.ts"
-}
