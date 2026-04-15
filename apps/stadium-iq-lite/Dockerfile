@@ -5,8 +5,8 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 # Inject production environment variables for the static build
-RUN VITE_REALTIME_URL=https://stadiumiq-realtime-3ipfsmyiba-el.a.run.app \
-    VITE_API_URL=https://stadiumiq-core-api-3ipfsmyiba-el.a.run.app \
+RUN VITE_REALTIME_URL=https://stadiumiq-realtime-793708893408.asia-south1.run.app \
+    VITE_API_URL=https://stadiumiq-core-api-793708893408.asia-south1.run.app \
     npm run build
 
 # Stage 2: Runtime
